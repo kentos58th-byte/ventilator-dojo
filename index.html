@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14263f">
+<meta name="description" content="一般病棟のための人工呼吸器学習アプリ。事前稽古・講義コンパニオン・アラーム実戦・シミュレーター・伝達者の巻。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="呼吸器道場">
+<title>呼吸器道場 — 一般病棟のための人工呼吸器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ai:#1f3a5f; --ai-d:#14263f; --ai-l:#e7edf5;
+  --shu:#b8402f; --shu-l:#f7e3df;
+  --kinari:#f6f1e7; --washi:#fffdf8; --sumi:#2a2622; --hai:#7a736a; --line:#e2d9c8;
+  --matcha:#4f7a4a; --matcha-l:#e6f0e3; --kin:#b08a3e; --kin-l:#f5ecd8;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--kinari);color:var(--sumi);font-family:"Noto Sans JP",system-ui,sans-serif;line-height:1.7;-webkit-text-size-adjust:100%}
+body{background-image:radial-gradient(rgba(120,100,70,.05) 1px,transparent 1px);background-size:6px 6px}
+button{font:inherit;cursor:pointer}
+h1,h2,h3,.mincho{font-family:"Shippori Mincho B1",serif;letter-spacing:.04em}
+a{color:var(--ai)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 96px}
+/* header */
+.top{background:var(--ai-d);color:#fff;position:sticky;top:0;z-index:20;box-shadow:0 2px 0 var(--kin);padding-top:env(safe-area-inset-top)}
+.top .in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.top .logo{font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:20px;letter-spacing:.12em;cursor:pointer;display:flex;align-items:center;gap:8px}
+.top .logo .seal{width:30px;height:30px;border-radius:6px;background:var(--shu);display:grid;place-items:center;font-size:15px;transform:rotate(-4deg)}
+.top .obi{margin-left:auto;font-size:12px;display:flex;align-items:center;gap:6px;opacity:.95}
+.obi-bar{width:34px;height:9px;border-radius:2px;border:1px solid rgba(255,255,255,.5)}
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--washi);border-top:1px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+.nav .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr)}
+.nav button{background:none;border:0;padding:8px 2px 10px;font-size:10.5px;color:var(--hai);display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav button .ic{font-family:"Shippori Mincho B1",serif;font-size:17px;font-weight:800;line-height:1.2}
+.nav button.on{color:var(--shu)}
+/* common */
+.hero{padding:26px 0 8px}
+.hero h1{font-size:28px;margin:0 0 4px}
+.hero p{margin:0;color:var(--hai);font-size:14px}
+.card{background:var(--washi);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:14px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.card h2{font-size:19px;margin:0 0 8px}
+.card h3{font-size:16px;margin:14px 0 6px}
+.muted{color:var(--hai);font-size:13px}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;background:var(--ai-l);color:var(--ai);font-weight:700;margin-right:4px}
+.tag.shu{background:var(--shu-l);color:var(--shu)} .tag.matcha{background:var(--matcha-l);color:var(--matcha)} .tag.kin{background:var(--kin-l);color:#7b5e22}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 18px;font-weight:700;background:var(--ai);color:#fff;font-size:15px}
+.btn:hover{filter:brightness(1.08)}
+.btn.shu{background:var(--shu)} .btn.ghost{background:transparent;color:var(--ai);border:1.5px solid var(--ai)} .btn.sm{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.callout{border-left:4px solid var(--shu);background:var(--shu-l);padding:12px 14px;border-radius:0 10px 10px 0;margin:12px 0}
+.callout.ai{border-color:var(--ai);background:var(--ai-l)} .callout.matcha{border-color:var(--matcha);background:var(--matcha-l)} .callout.kin{border-color:var(--kin);background:var(--kin-l)}
+.callout>b:first-child{display:block;margin-bottom:2px}
+details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;background:#fff}
+details summary{cursor:pointer;font-weight:700}
+textarea,input[type=text],input[type=number],select{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;color:var(--sumi)}
+textarea{min-height:110px;resize:vertical}
+label.f{display:block;font-size:13px;font-weight:700;margin:12px 0 4px}
+/* home */
+.flow{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:4px 0 8px}
+.flow .st{flex:1;min-width:92px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;font-size:12px}
+.flow .st b{display:block;font-family:"Shippori Mincho B1",serif;font-size:15px}
+.flow .ar{align-self:center;color:var(--kin);font-weight:800}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:var(--washi);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:left;position:relative;overflow:hidden}
+.tile .k{font-family:"Shippori Mincho B1",serif;font-size:30px;font-weight:800;color:var(--ai);line-height:1}
+.tile .t{font-weight:700;margin-top:6px}
+.tile .d{font-size:12px;color:var(--hai)}
+.tile.shu .k{color:var(--shu)}
+.obi-track{display:flex;gap:4px;margin:10px 0}
+.obi-track span{flex:1;height:10px;border-radius:3px;background:#e8e1d3}
+/* scroll list */
+.scroll{display:flex;gap:14px;align-items:center;background:var(--washi);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0;width:100%;text-align:left}
+.scroll .num{flex:none;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:20px;background:var(--ai-l);color:var(--ai);border:2px solid var(--ai)}
+.scroll.done .num{background:var(--shu);color:#fff;border-color:var(--shu)}
+.scroll .tt{font-weight:700} .scroll .ss{font-size:12px;color:var(--hai)}
+.scroll .st{margin-left:auto;font-size:12px;font-weight:700;color:var(--matcha);white-space:nowrap}
+/* quiz */
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--hai)}
+.prog{height:8px;background:#e8e1d3;border-radius:99px;overflow:hidden;margin:8px 0 14px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ai),var(--shu));transition:width .3s}
+.qtext{font-size:17px;font-weight:700;margin:6px 0 14px}
+.choice{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:15px;color:var(--sumi)}
+.choice:hover:not(:disabled){border-color:var(--ai)}
+.choice.ok{border-color:var(--matcha);background:var(--matcha-l)} .choice.ng{border-color:var(--shu);background:var(--shu-l)}
+.choice:disabled{cursor:default}
+.exp{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px}
+.exp.ok{background:var(--matcha-l);border:1px solid #c7dcc2} .exp.ng{background:var(--shu-l);border:1px solid #ecc5bd}
+.exp .h{font-weight:800;margin-bottom:4px}
+.again{font-size:12px;color:var(--shu);font-weight:700}
+.cert{border:3px double var(--kin);background:linear-gradient(#fffdf6,#fbf3e1);text-align:center;padding:24px 18px;border-radius:12px}
+.cert .big{font-family:"Shippori Mincho B1",serif;font-size:26px;font-weight:800;color:var(--shu);letter-spacing:.2em}
+/* monitor */
+.mon{background:#0f1720;color:#e9f1f7;border-radius:14px;padding:12px;font-family:"Noto Sans JP",sans-serif;border:3px solid #2c3a48}
+.mon .bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#9fb3c4;margin-bottom:8px}
+.mon .mode{background:#2d6cdf;color:#fff;border-radius:6px;padding:1px 8px;font-weight:700}
+.alarm{background:#d6332a;color:#fff;font-weight:800;border-radius:8px;padding:6px 10px;margin-bottom:8px;animation:blink 1s steps(2) infinite;display:flex;justify-content:space-between}
+.alarm.mid{background:#e6a019;color:#1d1d1d}
+@keyframes blink{50%{opacity:.55}}
+.mon .vals{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:480px){.mon .vals{grid-template-columns:repeat(2,1fr)}}
+.mv{background:#18232f;border-radius:8px;padding:6px 8px;border:1px solid #233243;text-align:left;color:inherit}
+.mv .n{font-size:11px;color:#9fb3c4}
+.mv .v{font-size:22px;font-weight:700;line-height:1.2}
+.mv .u{font-size:10px;color:#7f93a5}
+.mv.hi .v{color:#ff6b5e} .mv.lo .v{color:#ffcc4d}
+button.mv:hover{border-color:#5aa0ff}
+button.mv.sel{border-color:#5aa0ff;box-shadow:0 0 0 2px rgba(90,160,255,.35)}
+.mon .set{margin-top:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:480px){.mon .set{grid-template-columns:repeat(2,1fr)}}
+.mon .set .mv{background:#1d2b3a}
+.wave{height:46px;margin:6px 0 4px;background:#121c26;border-radius:8px;overflow:hidden}
+/* observe cards */
+.obs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:520px){.obs{grid-template-columns:1fr}}
+.ob{background:#fff;border:1.5px dashed var(--ai);border-radius:12px;padding:10px 12px;text-align:left;font-size:14px;color:var(--sumi)}
+.ob .l{font-weight:700;color:var(--ai)}
+.ob.open{border-style:solid;border-color:var(--line);background:var(--ai-l)}
+.principle{display:grid;gap:8px;counter-reset:p}
+.principle div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px 10px 46px;position:relative}
+.principle div::before{counter-increment:p;content:counter(p);position:absolute;left:12px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--shu);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+/* tabs */
+.seg{display:flex;gap:6px;overflow-x:auto;padding:4px 0 2px;margin-bottom:4px}
+.seg button{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--hai)}
+.seg button.on{background:var(--ai);border-color:var(--ai);color:#fff}
+.dope{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:520px){.dope{grid-template-columns:1fr 1fr}}
+.dope div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.dope b{display:block;font-family:"Shippori Mincho B1",serif;font-size:30px;color:var(--shu);line-height:1.1}
+.dope small{display:block;font-size:12px;color:var(--hai)}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding:4px}
+.msg{padding:10px 12px;border-radius:12px;font-size:14px;white-space:pre-wrap;max-width:92%}
+.msg.u{background:var(--ai);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.msg.a{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.checklist{list-style:none;padding:0;margin:8px 0}
+.checklist li{padding:8px 10px;border-radius:8px;margin:4px 0;font-size:14px;background:#fff;border:1px solid var(--line)}
+.checklist li.ok{border-color:#c7dcc2;background:var(--matcha-l)} .checklist li.q{border-color:#ecd9ae;background:var(--kin-l)}
+.foot{font-size:11.5px;color:var(--hai);border-top:1px solid var(--line);margin-top:28px;padding-top:12px}
+.slider{width:100%}
+.big-num{font-size:30px;font-weight:800;color:var(--ai);font-family:"Shippori Mincho B1",serif}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--sumi);color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;z-index:50;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+/* simulator */
+.sim{position:fixed;inset:0;z-index:40;background:#0b1118;color:#e9f1f7;display:grid;grid-template-columns:1fr minmax(230px,30%);gap:8px;padding:8px;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+.scr{display:flex;flex-direction:column;min-height:0;min-width:0;background:#0f1720;border:3px solid #2c3a48;border-radius:12px;padding:6px}
+.sbar{display:flex;gap:6px;align-items:center;font-size:12px}
+.smode{background:#2d6cdf;color:#fff;border-radius:6px;padding:2px 10px;font-weight:700;white-space:nowrap}
+.sal{flex:1;border-radius:6px;padding:2px 8px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sal.ok{background:#16222e;color:#7f93a5;font-weight:500}
+.sal.hi{background:#d6332a;color:#fff;animation:blink 1s steps(2) infinite}
+.sal.mid{background:#e6a019;color:#1d1d1d}
+.sal.sil{animation:none;opacity:.8}
+.ssil,.sx{border:1px solid #3a4b5d;background:#18232f;color:#e9f1f7;border-radius:6px;padding:2px 10px;font-size:12px;white-space:nowrap}
+#simCanvas{flex:1;width:100%;min-height:90px;margin:6px 0;border-radius:6px}
+.snums{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.sn{background:#18232f;border:1px solid #233243;border-radius:6px;padding:3px 5px;text-align:left;color:inherit;display:flex;flex-direction:column;line-height:1.15}
+.sn .n{font-size:10px;color:#9fb3c4;white-space:nowrap}.sn .v{font-size:18px;font-weight:700}.sn .u{font-size:9px;color:#7f93a5}
+.sn.hi .v{color:#ff6b5e}.sn.foc{border-color:#5aa0ff}
+.sinfo{font-size:12px;line-height:1.5;color:#cfdae4;margin-top:6px;max-height:30%;overflow:auto}
+.sinfo .hot{color:#ffb4ab;font-weight:700}
+.sfoc{margin-top:4px;padding-top:4px;border-top:1px solid #233243}.sfoc span{color:#9fb3c4}
+.spanel{background:#dfe5ec;color:#1d2733;border-radius:12px;padding:8px;overflow:auto;min-height:0;font-size:13px}
+.sh{font-weight:800;font-size:11px;color:#4a5a6b;margin:8px 0 4px;letter-spacing:.08em}.sh:first-child{margin-top:0}
+.sl2{font-size:11px;color:#4a5a6b;margin:4px 0 2px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px}.sgrid.three{grid-template-columns:1fr 1fr 1fr}
+.sb{border:1px solid #b7c2ce;background:#f5f7fa;border-radius:8px;padding:6px 4px;font-size:12px;font-weight:700;color:#1d2733;box-shadow:0 2px 0 #b7c2ce}
+.sb.on{background:#2d6cdf;color:#fff;border-color:#2d6cdf;box-shadow:0 2px 0 #1b4aa3}
+.srow{display:grid;grid-template-columns:1fr 34px 54px 34px;align-items:center;gap:4px;background:#f5f7fa;border:1px solid #c8d1db;border-radius:8px;padding:3px 4px;margin:3px 0}
+.srow.foc{border-color:#2d6cdf;box-shadow:0 0 0 2px rgba(45,108,223,.2)}
+.srow .sl{background:none;border:0;text-align:left;font-weight:700;font-size:12px;color:#1d2733;padding:2px;line-height:1.2}
+.srow .sl small{display:block;font-weight:400;font-size:10px;color:#6b7a8a}
+.srow .pm{height:30px;border-radius:7px;border:1px solid #b7c2ce;background:#fff;font-size:18px;font-weight:800;color:#2d6cdf;line-height:1}
+.srow .sv{text-align:center;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.snote{font-size:10px;color:#6b7a8a;margin:8px 0 0}
+.rot{display:none;position:absolute;inset:0;background:rgba(11,17,24,.97);z-index:5;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:8px}
+.rot-ic{font-size:56px;line-height:1;animation:spin 2.4s ease-in-out infinite}
+@keyframes spin{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
+.rot p{font-size:13px;color:#9fb3c4;margin:0 0 8px}
+@media (orientation:portrait) and (max-width:820px){.sim:not(.force) .rot{display:flex}}
+.sim.force{grid-template-columns:1fr;grid-template-rows:minmax(420px,62vh) auto;overflow:auto}
+.sim.force .snums{grid-template-columns:repeat(4,1fr)}
+@media (max-height:460px){.sn .v{font-size:15px}.sinfo{font-size:11px}.srow .pm{height:26px}.srow .sv{font-size:15px}}
+.vcpc{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+.vcpc th,.vcpc td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+.vcpc th{background:var(--ai-l);color:var(--ai)}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <div class="logo" onclick="go('home')"><span class="seal">呼</span>呼吸器道場</div>
+  <div class="obi" id="obiHead"></div>
+</div></header>
+
+<main class="wrap" id="app"></main>
+
+<nav class="nav"><div class="in" id="nav"></div></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   呼吸器道場 — prototype
+   ========================================================= */
+
+// ---------- storage (light per-viewer convenience) ----------
+const KEY='kokyuki-dojo-v1';
+let S={cleared:{},miss:{},name:'',history:[],review:[],plan:{total:30,people:4,flow:'',items:''},alarmDone:{},planSaved:false};
+try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+// ---------- AI (optional) ----------
+let sampleFn=null;
+try{ if(window.claude && typeof window.claude.use==='function'){ window.claude.use('sample').then(s=>{sampleFn=s; if(cur==='dentatsu') render();}).catch(()=>{}); } }catch(e){}
+
+// ---------- utils ----------
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1800);}
+let actx=null;
+function beep(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const now=actx.currentTime;[0,.18,.36].forEach((d,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=i%2?880:988;g.gain.setValueAtTime(.0001,now+d);g.gain.exponentialRampToValueAtTime(.08,now+d+.02);g.gain.exponentialRampToValueAtTime(.0001,now+d+.15);o.connect(g).connect(actx.destination);o.start(now+d);o.stop(now+d+.16);});}catch(e){}}
+
+// =========================================================
+// CONTENT — 事前稽古の巻物
+// =========================================================
+const SCROLLS=[
+ {id:'s1',kan:'一',title:'目的の巻',sub:'人工呼吸器は「何のため」にあるのか',
+  lesson:`<p>人工呼吸器の目的は大きく3つ。<b>①酸素化の改善</b>（酸素を取り込む）、<b>②換気の改善</b>（CO₂を吐き出す）、<b>③呼吸仕事量の軽減</b>（呼吸で疲れ切った体を休ませる）。</p>
+  <div class="callout"><b>一番大事なこと</b>人工呼吸器は病気を「治す」機械ではありません。原因の治療が効いてくるまでの<b>時間を稼ぐ機械（支持療法）</b>です。</div>`,
+  qs:[
+   {q:'人工呼吸器の目的として「適切でない」ものはどれ？',c:['酸素化を改善する','換気（CO₂の排出）を改善する','呼吸仕事量を軽くする','肺炎そのものを治す'],a:3,e:'人工呼吸器は原因を治す機械ではなく、抗菌薬などの原因治療が効くまでの時間を稼ぐ「支持療法」です。だからこそ「原因は良くなっているか？」を毎日考えます。'},
+   {q:'主に「酸素化」を反映する指標は？',c:['SpO₂・PaO₂','PaCO₂','血圧','尿量'],a:0,e:'酸素化＝酸素をどれだけ取り込めているか。SpO₂やPaO₂（血液ガス）で見ます。'},
+   {q:'主に「換気」を反映する指標は？',c:['SpO₂','PaCO₂（EtCO₂）','体温','Hb'],a:1,e:'換気＝CO₂をどれだけ吐き出せているか。PaCO₂が上がっていれば換気が足りていないサインです。SpO₂が良くても換気不全は隠れていることがあります。'},
+   {q:'人工呼吸器の設定のうち、主に「酸素化」に関わる組み合わせは？',c:['FiO₂（酸素濃度）とPEEP','呼吸回数と1回換気量','トリガー感度と吸気時間','アラーム音量と画面の明るさ'],a:0,e:'酸素化は「FiO₂」と「PEEP」、換気は「回数×1回換気量（＝分時換気量）」が主役。この2つの軸で設定を読むと整理しやすくなります。'},
+   {q:'人工呼吸器装着中の患者を受け持ったとき、毎日まず考えたい問いは？',c:['設定の数値を正確に経過表へ写せたか','なぜこの人は人工呼吸器が必要になり、その理由はいま改善しているか','アラームが鳴らなかったか','回路の交換日はいつか'],a:1,e:'記録や回路管理も大切ですが、出発点は「目的」。目的から考えると、数値の変化が「良くなっている／悪くなっている」というアセスメントに変わります。'},
+  ]},
+ {id:'s2',kan:'二',title:'過去・現在・未来の巻',sub:'目的からアセスメントする3つの時間軸',
+  lesson:`<div class="grid2">
+   <div class="callout ai" style="margin:0"><b>過去</b>なぜ装着したのか？（肺炎で酸素化不全、意識障害で気道確保、術後 など）</div>
+   <div class="callout ai" style="margin:0"><b>現在</b>その原因は良くなっている？目的は達成できている？</div>
+   <div class="callout ai" style="margin:0"><b>未来</b>離脱できる見通しは？合併症を防げている？その先の生活は？</div>
+   <div class="callout kin" style="margin:0"><b>ポイント</b>経過表の数字は「過去→現在の変化」を読むためにある。</div></div>`,
+  qs:[
+   {q:'「過去」の視点で確認することとして最も適切なのは？',c:['人工呼吸器を装着することになった理由','今日の設定値','明日の検査予定','回路の交換日'],a:0,e:'「なぜ装着したか」が分かると、「何が良くなれば外せるか」が見えてきます。カルテや申し送りで必ず確認しましょう。'},
+   {q:'「現在」の視点で考えることとして最も適切なのは？',c:['装着の原因が改善しているか、目的（酸素化・換気・仕事量）が達成できているか','前の勤務と同じ設定かどうかだけ','家族の面会予定','アラームが鳴った回数だけ'],a:0,e:'「現在」は目的の達成度を見る時間軸。SpO₂やFiO₂の推移、呼吸の様子、血液ガスなどから評価します。'},
+   {q:'「未来」の視点として最も適切なのは？',c:['離脱の見通しと、合併症の予防・その後の生活','次の勤務者への申し送り時間','退院後の外来予約','物品の補充'],a:0,e:'離脱だけでなく、筋力低下やせん妄などを防いで「呼吸器が外れたあとの生活」まで見据えるのが未来の視点です。'},
+   {q:'肺炎で挿管3日目。FiO₂ 0.6→0.35、PEEP 10→6 に下がってきた。読み取れることは？',c:['酸素化が改善傾向で、離脱を見据える段階に近づいている','酸素化が悪化している','換気が悪化している','設定ミスの可能性が高い'],a:0,e:'酸素化の主役であるFiO₂とPEEPが下がっている＝少ない助けで酸素化を保てている、ということ。「数字が変わった」を「患者が良くなっている」に読み替えるのがアセスメントです。'},
+   {q:'離脱に向けて、鎮静を浅くして覚醒を確かめることを何という？',c:['SAT（自発覚醒トライアル）','SBT（自発呼吸トライアル）','NPPV','PEEP'],a:0,e:'SAT（自発覚醒トライアル）で覚醒を確認し、そのうえでSBT（自発呼吸トライアル）で「自分で呼吸できるか」を確かめる、という流れが一般的です。'},
+  ]},
+ {id:'s3',kan:'三',title:'設定とモードの巻',sub:'基本の設定と、VC・PCの違い',
+  lesson:`<p>経過表に書き写している設定や数字には、それぞれ意味があります。まずは<b>基本の設定</b>と、<b>VC（量規定）とPC（圧規定）の違い</b>を押さえます。</p>
+  <div class="grid2">
+   <div class="callout ai" style="margin:0"><b>VC（量規定）</b>1回換気量を設定。量は保証され、<b>圧</b>が変わる → 圧を見る</div>
+   <div class="callout ai" style="margin:0"><b>PC（圧規定）</b>吸気圧を設定。圧は一定で、<b>換気量</b>が変わる → 換気量を見る</div></div>
+  <p class="muted" style="margin-top:8px">「講」タブの「基本の設定」とシミュレーターで、実際に設定を動かして確認できます。</p>`,
+  qs:[
+   {q:'PEEPの説明として正しいのは？',c:['息を吐き終わったときにも肺に一定の圧をかけ、肺胞がつぶれるのを防ぐ','吸うときの最大の圧','1分間の呼吸回数','酸素の濃度'],a:0,e:'PEEP（呼気終末陽圧）は、肺胞がしぼみきらないように支える圧。酸素化を改善します。'},
+   {q:'VC（量規定換気）で設定するものは？',c:['1回換気量（量を保証し、圧は肺の状態で変わる）','吸気圧（圧を一定にし、量は肺の状態で変わる）','酸素濃度だけ','PEEPだけ'],a:0,e:'VCは「量」を約束するモード。そのかわり、肺が硬くなったり痰で狭くなったりすると「圧」が上がります。'},
+   {q:'VCで管理中、痰で気道が狭くなった。画面で起きる変化は？',c:['1回換気量は保たれるが、気道内圧（Ppeak）が上がる','圧は変わらず、1回換気量が減る','PEEPが下がる','酸素濃度が上がる'],a:0,e:'VCは量を守るために、より高い圧で押し込みます。だからVCでは「圧（Ppeak）」の変化に気づくことが大切です。'},
+   {q:'PCで管理中、痰で気道が狭くなった。画面で起きる変化は？',c:['圧は設定どおりで変わらず、1回換気量（VTE）が減る','1回換気量は保たれ、圧が上がる','呼吸回数が自動で増える','何も変わらない'],a:0,e:'PCは圧を守るので、入りにくくなると「入る量」が減ります。PCでは高圧アラームが鳴りにくく、代わりに換気量の低下として現れます。'},
+   {q:'A/C（アシスト/コントロール）の説明として正しいのは？',c:['自発呼吸で始まった呼吸も、設定回数の呼吸も、毎回同じ強制換気（設定どおりの量または圧）が送られる','自発呼吸のときは何も補助しない','自発呼吸がないと換気されない','酸素だけを流すモード'],a:0,e:'A/Cでは患者が吸おうとするたびに強制換気が入ります。自発呼吸が多いと、呼吸回数も分時換気量も増えます。'},
+   {q:'SIMVの説明として正しいのは？',c:['設定回数だけ強制換気し、そのあいだの自発呼吸はPSなどで後押しする','すべての呼吸を自発呼吸に任せる','自発呼吸のたびに強制換気が入る','呼吸回数を設定しない'],a:0,e:'SIMVは「機械の呼吸」と「自分の呼吸」が混ざるモード。fTotal（全体）とfSpont（自発）を見ると、どちらが多いかがわかります。'},
+   {q:'CPAP+PS（自発呼吸モード）で注意することは？',c:['自発呼吸が前提のモード。自発呼吸がなくなると換気されず、無呼吸アラームが鳴る','機械が必ず設定回数の呼吸を送ってくれる','PEEPはかからない','鎮静を深くしても安全'],a:0,e:'CPAP+PSは離脱に近い段階で使われることが多いモード。呼吸回数の低下や無呼吸に気づくことが大切です（機種により無呼吸時のバックアップ換気があります）。'},
+   {q:'PS（プレッシャーサポート）とは？',c:['自発呼吸の吸気を、設定した圧で後押しする','呼気の終わりにかける圧','強制換気の回数','酸素の濃度'],a:0,e:'PSが下がってきた＝少ない後押しで吸えるようになってきた、ということ。離脱を考える材料のひとつです。'},
+   {q:'画面の「VTE」とは？',c:['吐いた息の1回換気量（実際に出ていった量）','吸気の最大圧','呼吸回数','酸素濃度'],a:0,e:'VTEは呼気の1回換気量。PCでは特に大事な観察項目です。リークや回路外れがあると小さくなります。'},
+   {q:'fTotal 18回、fSpont 12回、設定回数 6回（SIMV）。読み取れることは？',c:['呼吸の多くが患者自身の自発呼吸で、機械はそれを支えている','機械がすべての呼吸を送っている','呼吸が止まっている','設定ミスである'],a:0,e:'fTotal＝全体の呼吸回数、fSpont＝そのうち自発呼吸の回数。自発が多いほど「自分で呼吸している」割合が高く、離脱を考える材料になります。'},
+   {q:'Ppeak（最高気道内圧）が急に上がった。考えられることとして適切なのは？',c:['分泌物の貯留、チューブの屈曲・噛み込み、咳込み・ファイティング、気胸など','回路が外れた','酸素濃度が下がった','患者が深く眠った'],a:0,e:'Ppeakが上がる＝空気が入りにくくなっている（特にVCで目立つ）。原因は「痰」だけではありません。だから「とりあえず吸引」ではなく、まず患者を見て原因を考えます。'},
+   {q:'特殊モード「ASV」の説明として正しいのは？',c:['目標の分時換気量を達成するように、機械が1回換気量と回数を自動で調整し、自発呼吸があればそれを支える','設定した1回換気量と回数で常に同じ呼吸を送り続ける','自発呼吸があると止まってしまうモード','酸素だけを流すモード'],a:0,e:'ASVは一部の機種（Hamiltonなど）にある特殊モード。身長・性別から理想体重を計算して目標換気量を決めます。身長の入力値の確認は看護師にもできる安全確認です。'},
+  ]},
+ {id:'s4',kan:'四',title:'合併症の巻',sub:'起こりうることを知り、予防する',
+  lesson:`<p>人工呼吸器は命を支える一方で、合併症も起こします。<b>知っていれば予防できる</b>ものがほとんどです。</p>
+  <div class="grid2">
+   <div class="callout" style="margin:0"><b>VAP（人工呼吸器関連肺炎）</b>頭部挙上・口腔ケア・カフ圧管理</div>
+   <div class="callout" style="margin:0"><b>循環の抑制</b>胸の中の圧が上がり血圧が下がる</div>
+   <div class="callout" style="margin:0"><b>圧外傷（気胸など）</b>急な圧上昇・SpO₂低下</div>
+   <div class="callout" style="margin:0"><b>事故抜管・皮膚損傷</b>固定位置の確認・2人での体位変換</div>
+   <div class="callout" style="margin:0;grid-column:1/-1"><b>気管切開カニューレの事故抜去</b>固定ひもの確認・体位変換時の保持・予備カニューレをベッドサイドに</div></div>`,
+  qs:[
+   {q:'VAP（人工呼吸器関連肺炎）の予防として適切なのは？',c:['ベッドの頭部挙上30〜45°、口腔ケア、カフ圧の管理','完全に水平な仰臥位を保つ','口腔ケアは抜管後に行う','カフの空気は抜いておく'],a:0,e:'頭部挙上で胃内容物の逆流・誤嚥を減らし、口腔ケアで細菌を減らし、カフ圧で垂れ込みを防ぎます。'},
+   {q:'カフ圧の一般的な目安は？',c:['20〜30 cmH₂O','5 cmH₂O以下','50〜60 cmH₂O','測定は不要'],a:0,e:'低すぎると分泌物が垂れ込み（VAPの原因）、高すぎると気管粘膜を傷つけます。カフ圧計で確認しましょう。'},
+   {q:'陽圧換気で血圧が下がることがある理由は？',c:['胸の中の圧が上がり、心臓に戻る血液（静脈還流）が減るため','酸素が多すぎるため','痰が増えるため','体温が上がるため'],a:0,e:'人工呼吸器は「押し込む」呼吸。胸の中の圧が上がると心臓に血液が戻りにくくなり、特に脱水がある時や装着直後・PEEPを上げた時に血圧が下がりやすくなります。'},
+   {q:'事故抜管を防ぐために大切なのは？',c:['固定位置（例：口角○cm）を勤務ごとに確認・記録し、体位変換時は1人がチューブを保持する','固定テープは週1回だけ確認する','体位変換は1人で素早く行う','チューブの位置は医師だけが確認する'],a:0,e:'固定位置の数字は「いつもと同じか」を比べるためのもの。体位変換後のアラームはまずチューブの位置ずれを疑います。'},
+   {q:'長期の人工呼吸管理で起きやすく、早期離床や鎮静管理が予防につながるのは？',c:['筋力低下・せん妄','虫歯','視力低下','花粉症'],a:0,e:'「呼吸器が外れたら終わり」ではなく、その先の生活を守るための予防です（未来の視点）。'},
+   {q:'気管切開カニューレの固定ひもの締め具合の目安は？',c:['首とひもの間に指1本が入る程度','指が入らないほどきつく','指3〜4本が入るくらいゆるく','締め具合は気にしなくてよい'],a:0,e:'ゆるすぎると体位変換や咳込みで抜けやすく、きつすぎると皮膚トラブルの原因になります。体位変換のあとや毎勤務で確認しましょう。'},
+   {q:'気管切開の患者のベッドサイドに準備しておきたいものは？',c:['同じサイズと1サイズ小さい予備カニューレ・吸引・用手換気の物品・酸素','何も置かない方が安全','予備カニューレは病棟の倉庫にあればよい','吸引器だけあればよい'],a:0,e:'事故抜去は一刻を争います。1サイズ小さいものは、同じサイズが入らないときのため。気切日・サイズ・喉頭摘出の有無をベッドサイドに掲示しておくと、誰が駆けつけても動けます。'},
+   {q:'気胸（圧外傷）を疑うサインとして適切なのは？',c:['急な気道内圧上昇・SpO₂低下・片側の胸の動きや呼吸音の低下・皮下気腫','SpO₂の改善','尿量の増加','痰の色が透明になる'],a:0,e:'気胸は命に関わる緊急事態。片側だけ胸の上がりが悪い、呼吸音が聞こえにくい、皮膚を押すとプチプチする（握雪感）などは、すぐに応援を呼ぶサインです。'},
+  ]},
+ {id:'s5',kan:'五',title:'アラームの巻',sub:'鳴ったら消す、ではなく「まず患者」',
+  lesson:`<div class="principle">
+    <div><b>まず患者を見る</b>　顔色・胸の動き・SpO₂・意識・口元</div>
+    <div><b>原因を考える（DOPE）</b>　位置ずれ／閉塞／気胸／機器</div>
+    <div><b>わからない・悪化している</b>　呼吸器から外して用手換気＋応援を呼ぶ</div></div>
+  <div class="callout"><b>「とりあえず吸引」になっていませんか？</b>吸引は「判断の結果」であって「反射」ではありません。</div>`,
+  qs:[
+   {q:'人工呼吸器のアラームが鳴った。最初にとる行動は？',c:['患者のもとへ行き、顔色・胸の動き・SpO₂・意識を見る','まず消音ボタンを押す','まず吸引する','アラームの設定値を変える'],a:0,e:'アラームは「患者からのサイン」。原因の多くは患者のそばにあります。消音や吸引は、患者を見て原因を考えたあとに選ぶ行動です。'},
+   {q:'DOPEの「D」は？',c:['Displacement：チューブの位置ずれ・事故抜管','Drug：薬剤','Dehydration：脱水','Delirium：せん妄'],a:0,e:'固定位置（口角○cm）の変化、声が漏れる、片側だけ胸が上がる（片肺挿管）などで疑います。'},
+   {q:'DOPEの「O」は？',c:['Obstruction：分泌物・屈曲・噛み込みによる閉塞','Oxygen：酸素','Output：尿量','Overdose：過量投与'],a:0,e:'閉塞の原因は痰だけではありません。チューブの屈曲や噛み込みなら、吸引しても解決しません。'},
+   {q:'DOPEの「P」は？',c:['Pneumothorax：気胸','Pain：痛み','Position：体位','Pressure：圧'],a:0,e:'急なSpO₂低下・圧の上昇・片側の呼吸音低下・血圧低下がそろったら、気胸を疑ってすぐに応援を呼びます。'},
+   {q:'DOPEの「E」は？',c:['Equipment：回路の外れ・リーク・機器や酸素供給のトラブル','Emergency：緊急','Edema：浮腫','Exercise：運動'],a:0,e:'回路の接続部を「患者→チューブ→回路→本体」の順に目で追うと見落としが減ります。'},
+   {q:'原因がわからず、患者がどんどん悪化している。とるべき行動は？',c:['呼吸器から外して用手換気（BVM／ジャクソンリース）に切り替え、すぐに応援を呼ぶ','原因がわかるまで吸引を繰り返す','アラームを消音して医師の回診を待つ','設定を自分で変更する'],a:0,e:'用手換気で改善すれば「機械側（E）」、改善しなければ「患者側（D・O・P）」の可能性が高い、と切り分けられます。用手換気の物品の場所と使い方は日頃から確認しておきましょう。'},
+   {q:'吸引について正しいのは？',c:['分泌物があるという根拠（呼吸音・気道内圧の上昇・波形・視認・SpO₂低下など）に基づいて必要なときに行う','アラームが鳴ったらまず吸引する','2時間ごとに必ず定期的に行う','吸引にリスクはない'],a:0,e:'吸引には低酸素・無気肺・徐脈・気道の損傷などのリスクがあります。「アセスメントして、必要だから吸引する」が基本です。'},
+   {q:'気管切開カニューレが抜けかけて、首から浮いている。まずとる行動は？',c:['押し込まずに応援を呼び、口元と気切孔の両方に酸素を当てて患者を見る','すぐに奥まで押し込んで元に戻す','固定ひもを締め直して様子を見る','吸引を繰り返す'],a:0,e:'抜けかけたカニューレを押し込むと、気管ではなく皮下に入り込み（迷入）、換気できなくなる危険があります。再挿入は医師が行います。'},
+   {q:'気管切開カニューレが完全に抜けた。医師が来るまでに看護師が行うこととして最も適切なのは？',c:['応援を呼び、口元と気切孔の両方に酸素を当て、呼吸が不十分なら換気し、再挿入の物品をそろえる','自分で予備カニューレを入れ直す','気切孔にガーゼを当てて、医師が来るまで記録をする','吸引を繰り返す'],a:0,e:'気切カニューレの再挿入は基本的に医師が行います。看護師の役割は、医師が来るまで酸素化と換気をつなぎ、再挿入の準備を整えることです。'},
+   {q:'気管切開カニューレの事故抜去で、看護師がすぐに確認したい情報は？',c:['口・鼻から気管に空気が通るか（喉頭摘出の有無）と、気切してから何日目か','カニューレのメーカーと購入日','最後に吸引した時間と痰の色','家族の連絡先と面会時間'],a:0,e:'「口から換気できるか」で看護師の換気のしかたが決まります。「気切後の日数」は、医師が再挿入するか経口挿管にするかを判断する材料なので、すぐ伝えられるように。ベッドサイドに掲示しておくのが理想です。'},
+   {q:'喉頭摘出後（永久気管孔）の患者の呼吸が止まった。換気はどこから行う？',c:['気管孔から（小児用マスクなどを当てて）換気する','口からBVMで換気する','鼻から酸素を流せば十分','換気は医師が来るまで待つ'],a:0,e:'喉頭摘出後は口・鼻と気管がつながっていないため、口から換気しても肺に届きません。「この人は口から換気できるか」を事前に知っておくことが大切です。'},
+   {q:'消音ボタンの使い方として適切なのは？',c:['患者のそばで評価・対応しながら一時的に使う','鳴ったらすぐ押して元の作業に戻る','うるさいときは何度でも押してよい','消音すれば原因も解決する'],a:0,e:'消音は「周りに迷惑をかけずに対応に集中するため」の機能。原因を確認しないまま消すのは危険です。'},
+  ]},
+];
+const QMAP={};
+SCROLLS.forEach(s=>s.qs.forEach((q,i)=>{q.id=s.id+'-'+i;q.scroll=s;QMAP[q.id]=q;}));
+const ALLQ=Object.keys(QMAP);
+
+// =========================================================
+// CONTENT — アラーム実戦
+// =========================================================
+const FIRST_WRONG={
+ mute:'消音しても原因はそのまま。消音は「患者のそばで評価・対応しながら」使う機能です。',
+ suction:'「とりあえず吸引」になっています。原因が痰とは限りません。チューブの屈曲や位置ずれ、気胸なら吸引している間に時間を失い、吸引そのものが低酸素を招くこともあります。',
+ setting:'アラームの設定を看護師の判断で変えるのは危険です。アラームは患者からのサイン。まず患者を見ましょう。',
+};
+const SCEN=[
+ {id:'a1',title:'高圧アラームが鳴りやまない',tag:'O',
+  intro:'70代男性。肺炎で挿管3日目、SIMV(VC)+PSで管理中。夜勤中、ナースステーションに赤いアラームが響いた。',
+  mon:{mode:'SIMV(VC)+PS',alarm:'気道内圧 上限',lv:'hi',v:[['Ppeak','38','cmH₂O','hi'],['VTE','280','mL','lo'],['fTotal','26','回/分','hi'],['SpO₂','89','%','lo']]},
+  steps:[
+   {t:'choice',q:'あなたが最初にとる行動は？',o:[
+     ['消音ボタンを押して記録を続ける',0,FIRST_WRONG.mute],
+     ['吸引の準備をして訪室し、すぐに吸引する',0,FIRST_WRONG.suction],
+     ['患者のもとへ行き、顔色・胸の動き・SpO₂・意識を見る',1,'正解。アラームの原因の多くは患者のそばにあります。'],
+     ['アラームの上限を上げて鳴らないようにする',0,FIRST_WRONG.setting]]},
+   {t:'observe',q:'ベッドサイドで観察しよう（すべてタップ）',o:[
+     ['顔色・表情','やや苦しそうな表情。咳込んでいる。'],
+     ['胸の動き','左右差なし。'],
+     ['呼吸音','両側で粗い断続性副雑音。チューブ付近でゴロゴロ音。'],
+     ['SpO₂','95% → 89% に低下。'],
+     ['チューブ','固定位置は口角22cmで変化なし。屈曲・噛み込みなし。'],
+     ['画面','Ppeak 22 → 38 cmH₂O。VC（量規定）なので、入りにくくなると「圧」が上がる。']]},
+   {t:'choice',q:'DOPEで考えると、最も疑わしいのは？',o:[
+     ['D：位置ずれ',0,'固定位置は22cmで変化なし。位置ずれは考えにくい所見です。'],
+     ['O：閉塞（分泌物）',1,'正解。ゴロゴロ音・粗い副雑音・咳込み・圧の上昇がそろっています。'],
+     ['P：気胸',0,'胸の動きも呼吸音も左右差がありません。'],
+     ['E：機器',0,'回路の外れなら圧は「下がる」はず。今回は上がっています。']]},
+   {t:'choice',q:'どう対応する？',o:[
+     ['吸引し、そのあと呼吸音・SpO₂・Ppeakが戻ったかを再評価する',1,'正解。吸引した「あと」の評価までが一つの看護です。'],
+     ['しばらく様子を見る',0,'SpO₂が低下しています。原因が分かっているなら、対応を遅らせない。'],
+     ['医師にチューブの入れ替えを依頼する',0,'まずは分泌物の除去が先。改善しなければ報告・相談します。']]},
+  ],
+  lesson:'同じ「吸引」でも、アセスメントの結果として選んだ吸引は正解。根拠のある吸引と、反射の吸引は違う。'},
+ {id:'a2',title:'体位変換の直後に低分時換気量',tag:'D',
+  intro:'60代女性。PC-A/Cで管理中。2人で体位変換をした直後、アラームが鳴った。',
+  mon:{mode:'PC-A/C',alarm:'分時換気量 低下',lv:'hi',v:[['分時換気量','2.8','L/分','lo'],['VTE','150','mL','lo'],['Ppeak','18','cmH₂O',''],['SpO₂','90','%','lo']]},
+  steps:[
+   {t:'choice',q:'最初にとる行動は？',o:[
+     ['まず吸引する',0,FIRST_WRONG.suction],
+     ['患者を見る：口元・声・胸の動き・SpO₂',1,'正解。体位変換直後なので、チューブまわりは特によく見ます。'],
+     ['消音して体位を整え直す',0,FIRST_WRONG.mute],
+     ['アラーム音量を下げる',0,FIRST_WRONG.setting]]},
+   {t:'observe',q:'観察しよう（すべてタップ）',o:[
+     ['口元・声','口元からゴボゴボと空気が漏れる音。声を出そうとしている。'],
+     ['固定位置','口角22cm → 17cm に浅くなっている。'],
+     ['胸の動き','弱い。'],
+     ['SpO₂','94% → 90%。'],
+     ['回路','接続部の外れはなし。'],
+     ['画面','PC（圧規定）なので圧は設定近くのまま。VTEと分時換気量が大きく減っている。']]},
+   {t:'choice',q:'DOPEで最も疑わしいのは？',o:[
+     ['D：位置ずれ（抜けかけ）',1,'正解。固定位置が浅くなり、声が漏れる＝チューブが声門より上に抜けかけているサインです。'],
+     ['O：閉塞',0,'閉塞なら圧は上がるはず。今回は圧が下がり、換気量が減っています。'],
+     ['P：気胸',0,'体位変換直後・固定位置の変化・声漏れは、まず位置ずれを示します。'],
+     ['E：機器',0,'回路の外れはありません。漏れているのは口元です。']]},
+   {t:'choice',q:'どう対応する？',o:[
+     ['自分でチューブを押し込んで元の位置に戻す',0,'盲目的に押し込むと食道に入るなどの危険があります。'],
+     ['すぐに応援と医師を呼び、用手換気の物品を手元に準備。SpO₂と胸の動きを見ながら待つ',1,'正解。抜けてしまった場合に備えて、用手換気・再挿管の準備も。ひとりで抱えない。'],
+     ['固定テープを貼り直して様子を見る',0,'抜けかけたチューブの位置はテープでは戻りません。']]},
+  ],
+  lesson:'体位変換後のアラームは「D（位置ずれ）」をまず疑う。PCでは圧より「換気量の低下」に異変が出る。予防は「1人がチューブを保持」「固定位置を毎勤務確認」。'},
+ {id:'a3',title:'回路が外れた！',tag:'E',
+  intro:'50代男性。CPAP+PSで離脱を進めている。咳込んで大きく体を動かした直後、アラームが鳴った。',
+  mon:{mode:'CPAP+PS',alarm:'回路外れ',lv:'hi',v:[['Ppeak','0','cmH₂O','lo'],['VTE','---','mL','lo'],['分時換気量','0.0','L/分','lo'],['SpO₂','93','%','lo']]},
+  steps:[
+   {t:'choice',q:'最初にとる行動は？',o:[
+     ['患者を見ながら、チューブ→回路→本体の接続を目で追う',1,'正解。患者から機械に向かって順に追うと見落としが減ります。'],
+     ['とりあえず吸引する',0,FIRST_WRONG.suction],
+     ['消音してから考える',0,FIRST_WRONG.mute],
+     ['臨床工学技士に電話して待つ',0,'まずは目の前の患者と接続部の確認を。連絡はそのあとです。']]},
+   {t:'observe',q:'観察しよう（すべてタップ）',o:[
+     ['接続部','人工鼻と気管チューブの接続部が外れている。'],
+     ['胸の動き','胸が上がっていない。'],
+     ['SpO₂','96% → 93%。']]},
+   {t:'choice',q:'DOPEで考えると？',o:[
+     ['D',0,'チューブの位置は変わっていません。'],['O',0,'閉塞なら圧は上がります。'],['P',0,'接続部が外れていることが明らかです。'],
+     ['E：機器（回路外れ）',1,'正解。']]},
+   {t:'choice',q:'対応として最も適切なのは？',o:[
+     ['接続し直して終了',0,'つなぎ直しただけでは不十分。戻ったかの確認と再発予防まで。'],
+     ['接続し直し、胸の動き・SpO₂・VTEが戻ったかを確認。なぜ外れたか（回路の重み・体動・鎮静）を考える',1,'正解。']]},
+  ],
+  lesson:'「E」は直してからが本番。なぜ外れたかを考えると、次のアラームを防げる。'},
+ {id:'a4',title:'急にSpO₂が下がり、血圧も下がった',tag:'P',
+  intro:'70代男性。VC-A/Cで管理中。急に高圧アラームが鳴り、モニターのSpO₂も下がってきた。',
+  mon:{mode:'VC-A/C',alarm:'気道内圧 上限',lv:'hi',v:[['Ppeak','40','cmH₂O','hi'],['VTE','200','mL','lo'],['SpO₂','82','%','lo'],['BP','78/40','mmHg','lo']]},
+  steps:[
+   {t:'choice',q:'最初にとる行動は？',o:[
+     ['まず吸引する',0,FIRST_WRONG.suction],
+     ['患者のもとへ行き、顔色・胸の動き・SpO₂・意識を見る',1,'正解。'],
+     ['消音して医師に電話',0,FIRST_WRONG.mute],
+     ['酸素濃度を自分で100%に上げて様子を見る',0,'設定変更より先に、まず患者を見ること。']]},
+   {t:'observe',q:'観察しよう（すべてタップ）',o:[
+     ['胸の動き','右側の上がりが小さい。'],
+     ['呼吸音','右側で聞こえにくい。'],
+     ['皮膚','右の首〜胸を押すとプチプチする（握雪感＝皮下気腫）。'],
+     ['循環','血圧78/40、脈拍128。'],
+     ['チューブ','固定位置は変化なし。吸引カテーテルはスムーズに入り、痰は少ない。']]},
+   {t:'choice',q:'DOPEで最も疑わしいのは？',o:[
+     ['D',0,'固定位置は変わっていません。'],
+     ['O',0,'吸引カテーテルはスムーズに入り、痰も少ない。閉塞は考えにくい。'],
+     ['P：気胸',1,'正解。片側の胸の動きと呼吸音の低下、皮下気腫、血圧低下がそろっています。'],
+     ['E',0,'回路の外れなら圧は下がります。']]},
+   {t:'choice',q:'どう対応する？',o:[
+     ['すぐに応援（医師・当直・RRSなど院内の仕組み）を呼ぶ。悪化していれば呼吸器から外して用手換気に切り替え、救急カートや処置の準備をする',1,'正解。命に関わる事態。ひとりで抱えず、すぐに人を集めます。'],
+     ['吸引を繰り返す',0,'痰が原因ではありません。時間を失います。'],
+     ['次の巡視で再評価する',0,'血圧も下がっています。待ってはいけない状況です。']]},
+  ],
+  lesson:'「わからない・悪化している」ときは、呼吸器を外して用手換気＋応援。ひとりで抱えない。'},
+ {id:'a5',title:'気管切開の患者、おむつ交換のあとに',tag:'D（気切）',
+  intro:'80代女性。気管切開術後14日目（気切孔は完成と医師から説明あり。喉頭摘出はしていない）。CPAP+PSで人工呼吸器を装着中。側臥位でおむつ交換をした直後、アラームが鳴った。',
+  mon:{mode:'CPAP+PS',alarm:'分時換気量 低下',lv:'hi',v:[['分時換気量','2.1','L/分','lo'],['VTE','110','mL','lo'],['Ppeak','9','cmH₂O','lo'],['SpO₂','86','%','lo']]},
+  steps:[
+   {t:'choice',q:'最初にとる行動は？',o:[
+     ['まず吸引する',0,FIRST_WRONG.suction],
+     ['患者を見る：顔色・胸の動き・SpO₂・気切部・声',1,'正解。体位変換の直後なので、カニューレまわりは特によく見ます。'],
+     ['消音してからおむつ交換を終わらせる',0,FIRST_WRONG.mute],
+     ['アラームの下限を下げる',0,FIRST_WRONG.setting]]},
+   {t:'observe',q:'観察しよう（すべてタップ）',o:[
+     ['気切部','カニューレのフランジ（羽の部分）が首から浮いている。固定ひもがゆるい。'],
+     ['声','かすれた声が出ている（カフがあるのに声が出る＝空気が気管の外・上を通っている）。'],
+     ['吸引カテーテル','途中でつかえて入らない。'],
+     ['首まわり','気切孔の周りを押すとプチプチする（皮下気腫）。'],
+     ['胸の動き・SpO₂','胸の上がりが弱い。SpO₂ 94% → 86%。']]},
+   {t:'choice',q:'DOPEで考えると？',o:[
+     ['D：カニューレの位置ずれ（抜けかけ・皮下への迷入）',1,'正解。フランジが浮く・声が出る・カテーテルが入らない・皮下気腫は、カニューレが気管から外れているサインです。'],
+     ['O：痰による閉塞',0,'閉塞なら圧は上がるはず。今回は圧も換気量も下がっています。'],
+     ['P：気胸',0,'まずは目の前のカニューレの異常に注目を。'],
+     ['E：機器',0,'回路の外れではなく、カニューレ自体が浮いています。']]},
+   {t:'choice',q:'看護師がすぐに確認し、駆けつけた医師にも伝えたい情報は？',o:[
+     ['口から換気できるか（喉頭摘出の有無）と、気切後の日数',1,'正解。「口から換気できるか」で看護師の換気のしかたが決まり、「気切後の日数」は医師が再挿入か経口挿管かを判断する材料になります。今回は喉頭摘出なし＝口から換気できる、14日目。'],
+     ['前回のカニューレ交換をした人の名前',0,'今は換気と酸素化が最優先です。'],
+     ['最後に吸引した時間',0,'カテーテルが入らないのは痰ではなく位置ずれのためです。']]},
+   {t:'choice',q:'どう対応する？',o:[
+     ['浮いたカニューレを奥まで押し込んで元に戻す',0,'押し込むと皮下に迷入し、完全に気道を失う危険があります。'],
+     ['固定ひもを締め直して様子を見る',0,'すでに気管から外れかけています。締め直しても換気は戻りません。'],
+     ['自分で予備のカニューレを入れ直す',0,'気切カニューレの再挿入は基本的に医師が行います。誤って皮下に入ると、換気できなくなります。看護師は酸素と換気をつなぐことに集中します。'],
+     ['すぐに応援（医師・RRSなど）を呼ぶ。押し込まず、口元と気切孔の両方に酸素を当てる。呼吸が不十分なら気切孔をガーゼで押さえて口からBVMで換気し、再挿入の物品をそろえて医師を待つ',1,'正解。再挿入は医師。看護師の役割は、医師が来るまで「酸素化と換気をつなぐこと」です。']]},
+  ],
+  lesson:'気切の事故抜去で看護師がやるのは「応援・押し込まない・酸素・換気・物品準備」。再挿入は医師。口から換気できるかどうかで換気のしかたが変わる。'},
+];
+
+// =========================================================
+// CONTENT — 画面ツアー
+// =========================================================
+const SETTEI={
+ mode:['モード','どんな助け方で呼吸を送るか。VC/PC（量か圧か）と、A/C・SIMV・CPAP（どのくらい機械が送るか）の組み合わせ。','モードによって、異変が現れる場所（圧か換気量か）が違う。'],
+ vt:['1回換気量（VT）','1回の呼吸で送る空気の量。VC（量規定）で設定する。','量は保証されるので、代わりに「圧（Ppeak）」の変化を見る。目安は理想体重×6〜8 mL程度（医師が決める）。'],
+ pinsp:['吸気圧','PC（圧規定）で設定する、吸気のときにPEEPに上乗せする圧（機種により表し方が異なる）。','圧は一定。痰や肺の硬さで「換気量」が変わるので、VTE・分時換気量を見る。'],
+ f:['呼吸回数（設定）','機械が送る1分間の強制換気の回数。','実際の回数（fTotal）が設定より多ければ、自発呼吸がある。'],
+ ti:['吸気時間（Ti）','1回の吸気にかける時間。','短すぎると十分に入らず、長すぎると吐く時間が足りなくなる（オートPEEP）。'],
+ ps:['PS（プレッシャーサポート）','自発呼吸の吸気を、設定した圧で後押しする。','PSが下がってきた＝自分の力で吸えるようになってきた。離脱の目安のひとつ。'],
+ peep:['PEEP','息を吐き終わったときにも肺にかけておく圧。肺胞がつぶれるのを防ぎ、酸素化を良くする。','高いほど酸素化に助けが必要。上げた直後は血圧低下に注意。'],
+ fio2:['FiO₂（酸素濃度）','吸入酸素濃度。40%なら0.4。','SpO₂とセットで読む。SpO₂が良くてもFiO₂が高ければ、まだ重症。'],
+};
+const MONX={
+ ppeak:['Ppeak（最高気道内圧）','1回の呼吸で最も高くなった気道内の圧。','VCで特に重要。急上昇＝入りにくい（痰・屈曲・噛み込み・咳込み・気胸）、急低下＝漏れ・回路外れ。'],
+ pmean:['Pmean（平均気道内圧）','呼吸全体を通した気道内の平均の圧。','PEEPや吸気時間で変わる。高いと循環への影響も大きくなる。'],
+ vte:['VTE（呼気1回換気量）','実際に吐いた1回の量。','PCで特に重要。減ってきたら、痰・肺が硬くなった・漏れなどを考える。'],
+ mv:['分時換気量','1回換気量×呼吸回数＝1分間の換気量。','減るとCO₂がたまる。急な低下はアラームの対象。'],
+ ftotal:['fTotal（総呼吸回数）','機械の呼吸＋自発呼吸の、1分間の回数。','設定回数より多い＝自発呼吸がある。頻呼吸は苦痛・発熱・不安・換気不足のサインのことも。'],
+ fspont:['fSpont（自発呼吸回数）','PSなどで支えられた自発呼吸の回数。','SIMVやCPAP+PSで自発が増えてきた＝離脱に近づく材料のひとつ。'],
+ spo2:['SpO₂','酸素化の指標（生体モニター）。','FiO₂・PEEPとセットで読む。'],
+ etco2:['EtCO₂','吐いた息に含まれるCO₂。換気の指標。','分時換気量が減ると上がる。（シミュレーターの値は学習用の目安）'],
+};
+
+// =========================================================
+// CONTENT — 伝達者の巻：模範プラン（自分で考えたあとに開ける）
+// =========================================================
+const MODEL_PLAN=`【30分モデルプラン（例）】
+0〜3分　導入：「アラームが鳴ったら、最初に何をしますか？」と問いかける（ARCS：注意）
+3〜8分　目的と過去・現在・未来：アプリの「講」画面で症例を一緒に読む（ARCS：関連性）
+8〜18分　実機ツアー：経過表の項目を実機の画面で指差し確認。テスト肺でVCとPCを切り替え、テスト肺を握る（痰・硬い肺の想定）と圧と換気量のどちらが変わるかを見る（アプリのシミュレーターでも体験できる）
+18〜26分　アラーム体験：テスト肺を外す／回路を折ってアラームを鳴らす →「まず患者」→ DOPEで考えるロールプレイ（受講者が実際に動く）
+26〜30分　まとめ：コアメッセージ3つを受講者に言ってもらう →アプリで事後チェックの案内（ARCS：自信・満足感）
+
+【準備物品（例）】
+・Hamilton（患者に使用していない機器。臨床工学技士へ事前に借用依頼）
+・テスト肺、回路、人工鼻
+・用手換気の物品（BVM／ジャクソンリース）
+・（気切患者がいる病棟なら）予備の気管切開カニューレ・模擬の気切部
+・カフ圧計、（展示用）吸引セット・気管チューブ
+・経過表の見本（個人情報なし）
+・スマホ／タブレット（このアプリ）、タイマー`;
+
+// =========================================================
+// RENDER
+// =========================================================
+const NAV=[['home','道','ホーム'],['keiko','稽','事前稽古'],['kogi','講','講義'],['jissen','戦','アラーム'],['check','省','振り返り'],['dentatsu','伝','伝達者']];
+let cur='home';
+let session=null;   // quiz session
+let alarm=null;     // alarm session
+let kogiTab='mokuteki';
+let tourSel='mode';
+let chat=[];        // bot conversation
+let chatBusy=false;
+
+const OBI=[['白帯','#f4f1ea'],['黄帯','#e8c547'],['橙帯','#e08a3a'],['緑帯','#5f9a52'],['青帯','#2f6fb3'],['黒帯','#1b1b1b']];
+function clearedCount(){return SCROLLS.filter(s=>S.cleared[s.id]).length;}
+function ready(){return clearedCount()===SCROLLS.length;}
+
+function go(v){ if(location.hash!=='#'+v) location.hash=v; else {cur=v;render();} }
+let pendingSession=null;
+const VIEWS=['home','keiko','kogi','jissen','check','dentatsu','sim'];
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);cur=VIEWS.includes(h)?h:'home';session=pendingSession;pendingSession=null;alarm=null;post=null;render(1);});
+
+function renderChrome(){
+  const n=clearedCount(),o=OBI[n];
+  $('#obiHead').innerHTML=`<span class="obi-bar" style="background:${o[1]}"></span>${o[0]}${n===5?'・準備完了':''}`;
+  $('#nav').innerHTML=NAV.map(([k,ic,l])=>`<button class="${cur===k?'on':''}" onclick="go('${k}')"><span class="ic">${ic}</span>${l}</button>`).join('');
+}
+let lastCur=null;
+function render(top){
+  renderChrome();
+  const app=$('#app');
+  const fn={home:vHome,keiko:vKeiko,kogi:vKogi,jissen:vJissen,check:vCheck,dentatsu:vDentatsu,sim:vSim}[cur]||vHome;
+  const moved=top||cur!==lastCur; lastCur=cur;
+  app.innerHTML=cur==='sim'?vSim():`<div class="${moved?'fade':''}">${fn()}</div>${footer()}`;
+  after[cur]&&after[cur]();
+  if(moved) window.scrollTo({top:0});
+}
+const after={};
+function footer(){return `<div class="foot">プロトタイプ版：臨床内容は院内（医師・臨床工学技士・RST）の確認前です。実際の対応は院内の手順と医師の指示に従ってください。数値は一般的な目安で、画面やアラームの表示名は機種・ソフトウェアのバージョンによって異なります。</div>`;}
+
+// ---------- HOME ----------
+function vHome(){
+  const n=clearedCount();
+  return `
+  <section class="hero"><h1>呼吸器道場</h1><p>一般病棟のための人工呼吸器 ― 学んで、教えて、病棟に広げる</p></section>
+  <div class="card">
+    <h2>修行の流れ</h2>
+    <div class="flow">
+      <div class="st"><b>稽古</b>事前学習<br>全巻クリア</div><span class="ar">→</span>
+      <div class="st"><b>講義</b>実機と<br>アプリで</div><span class="ar">→</span>
+      <div class="st"><b>省みる</b>事後チェック<br>振り返り</div><span class="ar">→</span>
+      <div class="st"><b>伝える</b>病棟で<br>学習会</div>
+    </div>
+    <div class="muted">いまの帯：<b>${OBI[n][0]}</b>（${n}/5巻）</div>
+    <div class="obi-track">${OBI.slice(1).map((o,i)=>`<span style="background:${i<n?o[1]:'#e8e1d3'}"></span>`).join('')}</div>
+    ${ready()?`<div class="callout matcha"><b>準備完了</b>講義を受ける準備が整いました。「事前稽古」タブで準備完了証を表示できます。</div>`:`<div class="callout ai"><b>まずは事前稽古から</b>5つの巻をすべてクリアすると「準備完了」。点数ではなく、間違えた問題を解き直して全問クリアをめざします。</div>`}
+  </div>
+  <div class="tiles">
+    <button class="tile" onclick="go('keiko')"><div class="k">稽</div><div class="t">事前稽古</div><div class="d">基礎を5つの巻で</div></button>
+    <button class="tile" onclick="go('kogi')"><div class="k">講</div><div class="t">講義コンパニオン</div><div class="d">実機の横で使う</div></button>
+    <button class="tile shu" onclick="go('jissen')"><div class="k">戦</div><div class="t">アラーム実戦</div><div class="d">鳴ったらどう動く？</div></button>
+    <button class="tile" onclick="go('check')"><div class="k">省</div><div class="t">事後チェック</div><div class="d">振り返り帳つき</div></button>
+    <button class="tile" style="grid-column:1/-1;background:#0f1720;color:#e9f1f7;border-color:#2c3a48" onclick="openSim()"><div class="k" style="color:#f2c14e">機</div><div class="t">人工呼吸器シミュレーター</div><div class="d" style="color:#9fb3c4">モードや設定を動かして、圧・換気量・波形の変化を見る（スマホは横向きで）</div></button>
+    <button class="tile" style="grid-column:1/-1" onclick="go('dentatsu')"><div class="k">伝</div><div class="t">伝達者の巻</div><div class="d">学習会を自分で企画する → 添削 → 相談</div></button>
+  </div>
+  <div class="card">
+    <h2>この道場の3つの教え</h2>
+    <div class="principle">
+      <div><b>目的から考える</b>　人工呼吸器は治るまでの時間を稼ぐ機械。過去・現在・未来で読む。</div>
+      <div><b>アラームはまず患者</b>　消す前に、吸引する前に、患者を見て原因を考える。</div>
+      <div><b>合併症は予防できる</b>　知っていれば防げることがほとんど。</div>
+    </div>
+  </div>`;
+}
+
+// ---------- KEIKO (事前稽古) ----------
+function vKeiko(){
+  if(session) return vSession();
+  const n=clearedCount();
+  return `
+  <section class="hero"><h1>事前稽古</h1><p>講義の前に、全員が同じスタートラインに立つための稽古です。</p></section>
+  <div class="callout kin"><b>稽古のきまり</b>間違えた問題は解説を読んだあと、もう一度出題されます。全問正解でその巻はクリア。点数はつきません。</div>
+  ${SCROLLS.map(s=>`
+    <button class="scroll ${S.cleared[s.id]?'done':''}" onclick="startScroll('${s.id}')">
+      <span class="num">${s.kan}</span>
+      <span><span class="tt">${s.title}</span><br><span class="ss">${s.sub}・${s.qs.length}問</span></span>
+      <span class="st">${S.cleared[s.id]?'クリア ✓':''}</span>
+    </button>`).join('')}
+  ${n===5?certHTML():''}`;
+}
+function certHTML(){
+  const d=new Date(S.readyAt||Date.now());
+  return `<div class="card cert">
+    <div class="muted">呼吸器道場</div>
+    <div class="big">準備完了証</div>
+    <p style="margin:10px 0 4px">事前稽古 全五巻を修了し、<br>講義を受ける準備が整ったことを証する。</p>
+    <input type="text" id="certName" placeholder="お名前を入力" value="${esc(S.name)}" style="max-width:240px;text-align:center;margin:8px auto;display:block" oninput="S.name=this.value;save()">
+    <div class="muted">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日</div>
+    <p class="muted" style="margin-top:8px">講義の当日にこの画面を見せてください。</p>
+  </div>`;
+}
+function startScroll(id){
+  const s=SCROLLS.find(x=>x.id===id);
+  session={kind:'scroll',title:`${s.kan}の巻　${s.title}`,lesson:s.lesson,showLesson:true,queue:shuffle(s.qs.map(q=>q.id)),total:s.qs.length,solved:0,miss:{},ans:null,order:null,onDone:()=>{S.cleared[id]=true; if(ready()&&!S.readyAt) S.readyAt=Date.now(); save();}};
+  render(1);
+}
+function startReview(ids,title){
+  if(!ids.length){toast('振り返り帳は空です');return;}
+  session={kind:'review',title,queue:shuffle(ids),total:ids.length,solved:0,miss:{},ans:null,order:null,onDone:()=>{S.review=S.review.filter(id=>!ids.includes(id)); save();}};
+  if(cur!=='check'){pendingSession=session;location.hash='check';return;} render(1);
+}
+function vSession(){
+  const s=session;
+  if(s.showLesson){
+    return `<section class="hero"><h1 style="font-size:23px">${s.title}</h1></section>
+    <div class="card"><h2>はじめに</h2>${s.lesson}</div>
+    <div class="row"><button class="btn shu" onclick="session.showLesson=false;render(1)">稽古をはじめる</button><button class="btn ghost" onclick="session=null;render(1)">もどる</button></div>`;
+  }
+  if(!s.queue.length) return vSessionDone();
+  const q=QMAP[s.queue[0]];
+  if(!s.order) s.order=shuffle(q.c.map((_,i)=>i));
+  const pct=Math.round(s.solved/s.total*100);
+  const again=s.miss[q.id]?'<span class="again">もう一度の問題</span>':'';
+  let body=s.order.map(i=>{
+    let cls='';
+    if(s.ans!==null){ if(i===q.a) cls='ok'; else if(i===s.ans) cls='ng'; }
+    return `<button class="choice ${cls}" ${s.ans!==null?'disabled':''} onclick="answer(${i})">${esc(q.c[i])}</button>`;
+  }).join('');
+  if(s.ans!==null){
+    const ok=s.ans===q.a;
+    body+=`<div class="exp ${ok?'ok':'ng'}"><div class="h">${ok?'そのとおり。':'ここは押さえどころ。'}</div>${q.e}${ok?'':'<div class="muted" style="margin-top:6px">この問題はあとでもう一度出ます。</div>'}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" onclick="nextQ()">次へ</button></div>`;
+  }
+  return `<section class="hero" style="padding-top:18px"><h1 style="font-size:20px">${s.title}</h1></section>
+  <div class="card">
+    <div class="qhead"><span>のこり ${s.queue.length}問 ${again}</span><button class="btn ghost sm" onclick="if(window.confirmQuit){session=null;render(1)}else{window.confirmQuit=true;toast('もう一度押すと中断します');setTimeout(()=>window.confirmQuit=false,2000)}">中断</button></div>
+    <div class="prog"><i style="width:${pct}%"></i></div>
+    <div class="qtext">${esc(q.q)}</div>
+    ${body}
+  </div>`;
+}
+function answer(i){
+  const s=session,q=QMAP[s.queue[0]];
+  s.ans=i;
+  if(i!==q.a){ s.miss[q.id]=(s.miss[q.id]||0)+1; S.miss[q.id]=(S.miss[q.id]||0)+1; if(!S.review.includes(q.id)) S.review.push(q.id); save(); }
+  render();
+}
+function nextQ(){
+  const s=session,id=s.queue.shift(),q=QMAP[id];
+  if(s.ans===q.a){s.solved++;} else {s.queue.push(id);}
+  s.ans=null;s.order=null;render(1);
+}
+function vSessionDone(){
+  const s=session; s.onDone&&!s.doneCalled&&(s.onDone(),s.doneCalled=true); renderChrome();
+  const missed=Object.keys(s.miss);
+  return `<section class="hero"><h1 style="font-size:23px">${s.title}</h1><p>${s.kind==='scroll'?'この巻はクリアです。':'振り返りの解き直しが終わりました。'}</p></section>
+  <div class="card">
+    <h2>振り返り</h2>
+    ${missed.length?`<p>今回つまずいた問題です。<b>なぜ間違えたのか</b>を一言でいいので考えてみましょう。講義で質問するとさらに深まります。</p>
+      ${missed.map(id=>`<details><summary>${esc(QMAP[id].q)}</summary><p><b>答え：</b>${esc(QMAP[id].c[QMAP[id].a])}</p><p class="muted">${QMAP[id].e}</p></details>`).join('')}`
+      :`<div class="callout matcha"><b>一度もつまずかずにクリア</b>人に説明できるか、を次の目標にしてみましょう。</div>`}
+  </div>
+  ${s.kind==='scroll'&&ready()?`<div class="callout matcha"><b>全巻クリア！準備完了です</b>「事前稽古」の一覧の下に準備完了証が出ています。</div>`:''}
+  <div class="row"><button class="btn" onclick="session=null;render(1)">もどる</button></div>`;
+}
+
+// ---------- KOGI (講義コンパニオン) ----------
+function vKogi(){
+  const tabs=[['mokuteki','目的'],['jikan','過去・現在・未来'],['settei','基本の設定'],['sim','シミュレーター'],['gappei','合併症'],['bakkan','事故抜去'],['dope','アラーム・DOPE'],['asv','特殊モード（ASV）']];
+  let body='';
+  if(kogiTab==='mokuteki') body=`
+    <div class="card"><h2>人工呼吸器は何のため？</h2>
+      <div class="grid2">
+        <div class="callout ai" style="margin:0"><b>① 酸素化の改善</b>FiO₂・PEEP／SpO₂・PaO₂で見る</div>
+        <div class="callout ai" style="margin:0"><b>② 換気の改善</b>回数×1回換気量／PaCO₂で見る</div>
+        <div class="callout ai" style="margin:0"><b>③ 呼吸仕事量の軽減</b>呼吸回数・努力呼吸・表情で見る</div>
+        <div class="callout" style="margin:0"><b>治す機械ではない</b>原因の治療が効くまで時間を稼ぐ</div>
+      </div>
+      <h3>受講者への問いかけ</h3>
+      <p>「いま受け持っている患者さんは、<b>3つのうちどの目的</b>で人工呼吸器をつけていますか？」</p>
+    </div>`;
+  if(kogiTab==='jikan') body=`
+    <div class="card"><h2>過去・現在・未来ワークシート</h2>
+      <p class="muted">症例（例）：70代男性。肺炎による呼吸不全で挿管3日目、SIMV(VC)+PS。FiO₂ 0.6→0.35、PEEP 10→6、設定回数 14→8回、PS 10→8 cmH₂O。fTotal 18回（うち自発 10回）。</p>
+      ${['過去：なぜ人工呼吸器が必要になった？','現在：原因は改善している？目的は達成できている？','未来：離脱の見通しは？何を予防する？'].map((l,i)=>`
+        <label class="f">${l}</label><textarea id="ws${i}" placeholder="自分の言葉で書いてみよう"></textarea>`).join('')}
+      <details style="margin-top:12px"><summary>考え方の例をひらく（書いてから）</summary>
+        <p><b>過去：</b>肺炎で酸素を取り込めなくなった（酸素化不全）＋呼吸で疲れきっていた（仕事量の増大）。</p>
+        <p><b>現在：</b>FiO₂・PEEPが下がっている＝酸素化は改善傾向。設定回数・PSも下がり、自発呼吸が増えている＝機械の助けが少なくて済んでいる。原因（肺炎）の治療が効いてきている。</p>
+        <p><b>未来：</b>鎮静を浅くして覚醒を確認（SAT）→自発呼吸トライアル（SBT）を見据える。VAP・せん妄・筋力低下の予防、早期離床。</p>
+      </details>
+    </div>`;
+  if(kogiTab==='settei') body=`
+    <div class="card"><h2>VC（量規定）とPC（圧規定）</h2>
+      <table class="vcpc"><tr><th></th><th>VC（量規定）</th><th>PC（圧規定）</th></tr>
+        <tr><td><b>設定する</b></td><td>1回換気量</td><td>吸気圧</td></tr>
+        <tr><td><b>保証される</b></td><td>量</td><td>圧</td></tr>
+        <tr><td><b>肺の状態で変わる</b></td><td>圧（Ppeak）</td><td>1回換気量（VTE）</td></tr>
+        <tr><td><b>看護師が特に見る</b></td><td>Ppeakの上昇・高圧アラーム</td><td>VTE・分時換気量の低下</td></tr></table>
+      <div class="callout kin"><b>ここが一番のポイント</b>痰がたまったとき、VCなら「圧が上がる」、PCなら「換気量が減る」。モードによって、異変が現れる場所が違います。</div>
+      <button class="btn" onclick="openSim()">シミュレーターで比べてみる</button>
+    </div>
+    <div class="card"><h2>換気のしかた（モード）</h2>
+      ${[['A/C（アシスト/コントロール）','すべての呼吸を強制換気で送る。自発呼吸で始まっても、毎回同じ量（VC）または圧（PC）が送られる。','自発呼吸が多いと、呼吸回数と分時換気量が増える。'],
+         ['SIMV＋PS','設定回数だけ強制換気し、そのあいだの自発呼吸はPSで後押しする。','fTotalとfSpontで、機械の呼吸と自分の呼吸の割合を見る。'],
+         ['CPAP＋PS（自発呼吸モード）','強制換気はなく、自発呼吸をPEEPとPSで支える。離脱に近い段階で使われることが多い。','自発呼吸が前提。呼吸回数の低下・無呼吸に注意。']].map(([a,b,c])=>`<div class="callout ai" style="margin:8px 0"><b>${a}</b>${b}<br><span class="muted">看るポイント：${c}</span></div>`).join('')}
+    </div>
+    <div class="card"><h2>基本の設定項目</h2>
+      ${Object.keys(SETTEI).filter(k=>k!=='mode').map(k=>{const d=SETTEI[k];return `<details><summary>${d[0]}</summary><p><b>意味：</b>${d[1]}</p><p><b>看るポイント：</b>${d[2]}</p></details>`;}).join('')}
+    </div>
+    <div class="card"><h2>画面で見る数字（モニター）</h2>
+      ${Object.keys(MONX).map(k=>{const d=MONX[k];return `<details><summary>${d[0]}</summary><p><b>意味：</b>${d[1]}</p><p><b>看るポイント：</b>${d[2]}</p></details>`;}).join('')}
+    </div>
+    <div class="card"><h2>機種によるモード名のちがい</h2>
+      <p class="muted">同じ考え方のモードでも、機種によって名前が違います。Hamiltonの例（ソフトウェアのバージョンにより異なることがあります）。</p>
+      <table class="vcpc"><tr><th>このアプリ</th><th>Hamiltonの例</th></tr>
+        <tr><td>VC-A/C</td><td>(S)CMV</td></tr><tr><td>PC-A/C</td><td>P-CMV</td></tr>
+        <tr><td>SIMV(VC)+PS</td><td>SIMV</td></tr><tr><td>SIMV(PC)+PS</td><td>P-SIMV</td></tr>
+        <tr><td>CPAP+PS</td><td>SPONT</td></tr><tr><td>（特殊モード）</td><td>ASV など</td></tr></table>
+      <p class="muted">実機の講義では、病棟の機器の表示で確認してください。</p>
+    </div>`;
+  if(kogiTab==='asv') body=`
+    <div class="callout kin"><b>ASVは特殊モードのひとつ</b>基本は「基本の設定」で学んだ通常のモード。ASVは一部の機種（Hamiltonなど）にあり、この病棟でも使うことがあるので、経過表の項目の意味がわかるようにしておきます。</div>
+    <div class="card"><h2>ASVの目標換気量を体験</h2>
+      <p>ASVは<b>身長と性別</b>から理想体重を計算し、<b>%MinVol</b>をかけて目標の分時換気量を決めます。</p>
+      <div class="grid2">
+        <div><label class="f">身長（cm）</label><input type="number" id="ah" value="170" min="130" max="200"></div>
+        <div><label class="f">性別</label><select id="as"><option value="m">男性</option><option value="f">女性</option></select></div>
+      </div>
+      <label class="f">%MinVol：<span id="amv">100</span>%</label>
+      <input type="range" class="slider" id="ar" min="25" max="200" step="5" value="100">
+      <div class="grid2" style="margin-top:12px">
+        <div class="callout ai" style="margin:0"><b>理想体重</b><span class="big-num" id="aibw">-</span> kg</div>
+        <div class="callout matcha" style="margin:0"><b>目標の分時換気量</b><span class="big-num" id="atv">-</span> L/分</div>
+      </div>
+      <p class="muted" style="margin-top:8px">計算式（成人の目安）：理想体重 男性 50＋0.91×(身長−152.4)、女性 45.5＋0.91×(身長−152.4)。目標分時換気量 ＝ 理想体重 × 0.1 L/分 × %MinVol/100。</p>
+      <div class="callout kin"><b>実機でやってみよう</b>テスト肺につないだHamiltonで身長を10cm変えてみると、目標の換気量が変わります。「身長の入力ミス＝換気のずれ」を体感できます。</div>
+      <h3>機械はどう助ける？</h3>
+      <p>目標の換気量を、<b>呼吸の仕事がいちばん少なくて済む「1回換気量×回数」の組み合わせ</b>で達成しようとします。自発呼吸が出てくると機械の呼吸は減り、自発呼吸を支える形に変わります。</p>
+      <p>だから看護師は「fSpontが増えてきた」「Pinspが下がってきた」を見ると、<b>機械への依存が減ってきた＝回復</b>を読み取れます。</p>
+    </div>`;
+  if(kogiTab==='gappei') body=`
+    <div class="card"><h2>合併症と予防</h2>
+      ${[['VAP（人工呼吸器関連肺炎）','頭部挙上30〜45°／口腔ケア／カフ圧20〜30 cmH₂O／不要な回路の開放を避ける'],
+         ['循環の抑制（血圧低下）','胸の中の圧が上がり静脈還流が減る。装着直後・PEEPを上げた時・脱水時に注意'],
+         ['圧外傷（気胸）','急な圧上昇・SpO₂低下・片側の胸の動きや呼吸音低下・皮下気腫 → すぐ応援'],
+         ['事故抜管','固定位置（口角○cm）を毎勤務確認／体位変換は1人がチューブを保持'],
+         ['皮膚・粘膜の損傷','固定テープ・チューブによる口角や唇の圧迫。固定位置を定期的に変える'],
+         ['筋力低下・せん妄','鎮静は必要最小限に、早期離床。呼吸器が外れた「その先」を守る'],
+        ].map(([a,b])=>`<div class="callout" style="margin:8px 0"><b>${a}</b>${b}</div>`).join('')}
+    </div>`;
+  if(kogiTab==='bakkan') body=`
+    <div class="card"><h2>事故抜去：医師が来るまでに看護師がやること</h2>
+      <div class="callout"><b>再挿入は医師。看護師の仕事は「つなぐこと」</b>挿管チューブも気管切開カニューレも、入れ直すのは基本的に医師です。看護師に求められるのは、医師が来るまで<b>酸素化と換気をつなぎ、準備を整えること</b>です。</div>
+      <h3>気管切開カニューレが抜けた・抜けかけている</h3>
+      <div class="principle">
+        <div><b>応援を呼ぶ</b>　医師・RRSなど院内の仕組みで、すぐに人を集める。救急カートを持ってきてもらう</div>
+        <div><b>押し込まない</b>　抜けかけたカニューレを戻そうとすると、皮下に入り込み換気できなくなる</div>
+        <div><b>患者を見る</b>　呼吸しているか・胸の動き・SpO₂・意識・顔色</div>
+        <div><b>酸素を当てる</b>　口元（マスク）と気切孔の<b>両方</b>に酸素を当てる</div>
+        <div><b>呼吸が不十分なら換気</b>　下の「口から換気できるか」で方法が変わる</div>
+        <div><b>再挿入の物品をそろえる</b>　予備カニューレ（同じサイズ・1サイズ小さい）・潤滑剤・カフ用シリンジ・吸引・照明</div>
+      </div>
+      <h3>換気のしかた：口から換気できる？</h3>
+      <div class="grid2">
+        <div class="callout matcha" style="margin:0"><b>口から換気できる人</b>気切孔をガーゼで押さえてふさぎ、口からBVM（マスク）で換気。</div>
+        <div class="callout matcha" style="margin:0"><b>口から換気できない人（喉頭摘出後・永久気管孔）</b>口と気管がつながっていない。気切孔に小児用マスクなどを当てて換気。</div>
+      </div>
+      <h3>医師に伝える情報</h3>
+      <p>喉頭摘出の有無（口から換気できるか）、<b>気切してから何日目か</b>、カニューレのサイズ、いまの呼吸・SpO₂。<br><span class="muted">気切直後（気切孔が完成する前、一般に術後1週間前後まで）は再挿入が難しく危険なため、医師が経口挿管を選ぶこともあります。</span></p>
+      <h3>抜けかけのサイン（早く気づく）</h3>
+      <p>カフがあるのに声が出る、フランジ（羽の部分）が首から浮く、吸引カテーテルが入らない、気切孔まわりの皮下気腫、換気量の低下・SpO₂低下。</p>
+      <h3>ふだんから備えておく</h3>
+      <p><b>ベッドサイド：</b>予備カニューレ（同じサイズ・1サイズ小さい）、潤滑剤、カフ用シリンジ、吸引、BVM・マスク（小児用も）、酸素、ガーゼ。<br><b>掲示：</b>気切日・カニューレのサイズ・喉頭摘出の有無。<br><b>予防：</b>固定ひもは指1本が入る程度／体位変換・おむつ交換では1人がカニューレと回路を保持／回路の重みで引っ張られないよう支える／毎勤務で固定を確認。</p>
+      <h3>挿管チューブの場合</h3>
+      <div class="callout ai"><b>抜けた・抜けかけている</b>応援を呼ぶ → 押し込まない → 口元からマスク（BVM）で酸素・換気 → 再挿管の準備（救急カート・吸引）。固定位置（口角○cm）が「いつもと違う」ことに気づけるかがカギ。</div>
+      <div class="callout kin"><b>院内の手順を確認しよう</b>事故抜去への対応は病院ごとに決まりがあります。院内の手順・医師の指示を必ず確認してください。</div>
+      <button class="btn shu" onclick="go('jissen')">実戦5「気管切開の患者」で体験する</button>
+    </div>`;
+  if(kogiTab==='dope') body=`
+    <div class="card"><h2>アラームが鳴ったら</h2>
+      <div class="principle">
+        <div><b>まず患者を見る</b>　顔色・胸の動き・SpO₂・意識・口元</div>
+        <div><b>原因を考える（DOPE）</b>　下の4つを順に</div>
+        <div><b>わからない・悪化</b>　呼吸器から外して用手換気＋応援</div>
+      </div>
+      <h3>DOPE</h3>
+      <div class="dope">
+        <div><b>D</b>位置ずれ<small>固定位置・声漏れ・片側だけ胸が上がる・気切カニューレの浮き</small></div>
+        <div><b>O</b>閉塞<small>痰・屈曲・噛み込み（圧↑）</small></div>
+        <div><b>P</b>気胸<small>片側の呼吸音↓・皮下気腫・血圧↓</small></div>
+        <div><b>E</b>機器<small>回路外れ・リーク（圧↓）・酸素供給</small></div>
+      </div>
+      <div class="callout" style="margin-top:14px"><b>「とりあえず吸引」になっていませんか？</b>吸引は判断の結果。原因が屈曲・位置ずれ・気胸なら、吸引している間に時間を失います。吸引自体にも低酸素・無気肺・徐脈のリスクがあります。</div>
+      <div class="callout ai"><b>圧で見分けるヒント（VCの場合）</b>圧が<b>上がる</b>＝入りにくい（O・P・咳込み）／圧が<b>下がる</b>＝漏れている（D・E）。<br><b>PCでは圧は設定どおりのまま</b>なので、同じ異常が「換気量の低下」として現れます。</div>
+      <button class="btn shu" onclick="go('jissen')">アラーム実戦で体験する</button>
+    </div>`;
+  return `<section class="hero"><h1>講義コンパニオン</h1><p>実機（Hamilton）の横に置いて使う画面です。</p></section>
+  <div class="seg">${tabs.map(([k,l])=>`<button class="${kogiTab===k?'on':''}" onclick="${k==='sim'?'openSim()':`kogiTab='${k}';render(1)`}">${l}</button>`).join('')}</div>
+  ${body}`;
+}
+after.kogi=()=>{
+  if(kogiTab==='asv'){
+    const calc=()=>{const h=+$('#ah').value||170,sx=$('#as').value,p=+$('#ar').value;
+      const ibw=Math.max(0,(sx==='m'?50:45.5)+0.91*(h-152.4));
+      $('#amv').textContent=p;$('#aibw').textContent=ibw.toFixed(1);$('#atv').textContent=(ibw*0.1*p/100).toFixed(1);};
+    ['#ah','#as','#ar'].forEach(s=>$(s).addEventListener('input',calc));calc();
+  }
+  if(kogiTab==='jikan'){
+    [0,1,2].forEach(i=>{const el=$('#ws'+i);try{el.value=sessionStorage.getItem('ws'+i)||'';}catch(e){} el.addEventListener('input',()=>{try{sessionStorage.setItem('ws'+i,el.value);}catch(e){}});});
+  }
+};
+// ---------- JISSEN (アラーム実戦) ----------
+function vJissen(){
+  if(alarm) return vAlarm();
+  return `<section class="hero"><h1>アラーム実戦</h1><p>アラームが鳴った。あなたはどう動く？</p></section>
+  <div class="card"><h2>実戦の心得</h2>
+    <div class="principle">
+      <div><b>まず患者を見る</b></div><div><b>原因を考える（DOPE）</b></div><div><b>わからない・悪化 → 用手換気＋応援</b></div>
+    </div>
+    <p class="muted" style="margin-top:8px">音が鳴ります。音量にご注意ください。</p>
+  </div>
+  ${SCEN.map((s,i)=>`<button class="scroll ${S.alarmDone[s.id]?'done':''}" onclick="startAlarm(${i})">
+    <span class="num">${i+1}</span><span><span class="tt">${s.title}</span><br><span class="ss">${S.alarmDone[s.id]?'クリア済み・原因：'+s.tag:'原因は…？'}</span></span>
+    <span class="st">${S.alarmDone[s.id]?'クリア ✓':''}</span></button>`).join('')}`;
+}
+function startAlarm(i){alarm={i,step:-1,picked:null,opened:{},wrong:0};beep();render(1);}
+function monHTML(m,resolved){
+  return `<div class="mon">
+    <div class="bar"><span class="mode">${m.mode}</span><span>人工呼吸器</span></div>
+    ${resolved?'':`<div class="alarm ${m.lv==='mid'?'mid':''}"><span>⚠ ${m.alarm}</span><span>!!!</span></div>`}
+    <div class="vals">${m.v.map(([n,v,u,c])=>`<div class="mv ${resolved?'':c}"><div class="n">${n}</div><div class="v">${v}</div><div class="u">${u}</div></div>`).join('')}</div>
+  </div>`;
+}
+function vAlarm(){
+  const s=SCEN[alarm.i];
+  if(alarm.step===-1){
+    return `<section class="hero" style="padding-top:18px"><span class="tag shu">実戦 ${alarm.i+1}</span><h1 style="font-size:22px">${s.title}</h1></section>
+    ${monHTML(s.mon)}
+    <div class="card"><p>${s.intro}</p><button class="btn shu" onclick="alarm.step=0;render(1)">ベッドサイドへ</button> <button class="btn ghost" onclick="beep()">もう一度鳴らす</button></div>`;
+  }
+  if(alarm.step>=s.steps.length){
+    S.alarmDone[s.id]=true;save();
+    return `<section class="hero" style="padding-top:18px"><span class="tag matcha">クリア</span><h1 style="font-size:22px">${s.title}</h1><p>原因は <b>${s.tag}</b> でした。</p></section>
+    ${monHTML(s.mon,true)}
+    <div class="callout matcha"><b>この実戦の教え</b>${s.lesson}</div>
+    <div class="card"><h2>振り返り</h2><p>${alarm.wrong?`途中で${alarm.wrong}回、別の選択肢を選びました。そのとき<b>何を根拠に選んだか</b>を思い出してみましょう。実際の現場でも同じ動きをしていませんか？`:'迷わず進めました。この流れを、病棟のスタッフに説明できるか試してみましょう。'}</p></div>
+    <div class="row"><button class="btn" onclick="alarm=null;render(1)">一覧にもどる</button>${alarm.i<SCEN.length-1?`<button class="btn shu" onclick="startAlarm(${alarm.i+1})">次の実戦へ</button>`:''}</div>`;
+  }
+  const st=s.steps[alarm.step];
+  let body='';
+  if(st.t==='choice'){
+    body=st.o.map(([txt,ok,fb],k)=>{
+      let cls=''; if(alarm.picked!==null){ if(k===alarm.picked) cls=ok?'ok':'ng'; }
+      const done=alarm.picked!==null&&st.o[alarm.picked][1];
+      return `<button class="choice ${cls}" ${done?'disabled':''} onclick="pickAlarm(${k})">${esc(txt)}</button>`;
+    }).join('');
+    if(alarm.picked!==null){
+      const [_,ok,fb]=st.o[alarm.picked];
+      body+=`<div class="exp ${ok?'ok':'ng'}"><div class="h">${ok?'その判断でOK':'ちょっと待って'}</div>${esc(fb)}${ok?'':'<div class="muted" style="margin-top:4px">別の選択肢を選び直してください。</div>'}</div>`;
+      if(ok) body+=`<div class="row" style="margin-top:12px"><button class="btn" onclick="alarm.step++;alarm.picked=null;render(1)">次へ</button></div>`;
+    }
+  } else {
+    const all=st.o.every((_,k)=>alarm.opened[k]);
+    body=`<div class="obs">${st.o.map(([l,v],k)=>`<button class="ob ${alarm.opened[k]?'open':''}" onclick="alarm.opened[${k}]=1;render()"><div class="l">${esc(l)}</div>${alarm.opened[k]?esc(v):'<span class="muted">タップして観察</span>'}</button>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" ${all?'':'disabled'} onclick="alarm.step++;alarm.opened={};render(1)">観察を終えて考える</button></div>`;
+  }
+  return `<section class="hero" style="padding-top:18px"><span class="tag shu">実戦 ${alarm.i+1}</span><h1 style="font-size:20px">${s.title}</h1></section>
+  ${monHTML(s.mon)}
+  <div class="card"><div class="prog"><i style="width:${Math.round(alarm.step/s.steps.length*100)}%"></i></div>
+  <div class="qtext">${esc(st.q)}</div>${body}</div>`;
+}
+function pickAlarm(k){const st=SCEN[alarm.i].steps[alarm.step]; alarm.picked=k; if(!st.o[k][1]) alarm.wrong++; render();}
+
+// ---------- CHECK (事後チェック・振り返り) ----------
+let post=null;
+function vCheck(){
+  if(session) return vSession();
+  if(post) return vPost();
+  const last=S.history[S.history.length-1];
+  let since='';
+  if(last){const days=Math.floor((Date.now()-last.at)/86400000);
+    since=`<p class="muted">前回の事後チェックから ${days}日。${days>=7?'<b>そろそろ再チェックのタイミングです。</b>':'1週間後・1か月後にもう一度解くと記憶に残りやすくなります。'}</p>`;}
+  return `<section class="hero"><h1>事後チェック</h1><p>講義のあとに。点数ではなく「どこを見直すか」を見つけるためのチェックです。</p></section>
+  <div class="card"><h2>事後チェック（12問）</h2>
+    <p>全巻からランダムに出題します。間違えた問題は「振り返り帳」に入ります。</p>
+    ${since}
+    <button class="btn shu" onclick="startPost()">はじめる</button>
+  </div>
+  <div class="card"><h2>振り返り帳</h2>
+    ${S.review.length?`<p>見直したい問題が <b>${S.review.length}問</b> あります。解き直して全問クリアすると帳面から消えます。</p>
+      <button class="btn" onclick="startReview(S.review.slice(),'振り返り帳の解き直し')">解き直す</button>
+      ${S.review.map(id=>`<details><summary>${esc(QMAP[id].q)}</summary><p class="muted">${esc(QMAP[id].scroll.title)}</p><p><b>答え：</b>${esc(QMAP[id].c[QMAP[id].a])}</p><p class="muted">${QMAP[id].e}</p></details>`).join('')}`
+      :`<p class="muted">見直したい問題はありません。</p>`}
+  </div>
+  ${S.history.length?`<div class="card"><h2>これまでの記録</h2>${S.history.slice(-5).reverse().map(h=>{const d=new Date(h.at);return `<div class="muted">${d.getMonth()+1}/${d.getDate()}　見直し ${h.wrong.length}問${h.wrong.length?'：'+[...new Set(h.wrong.map(id=>QMAP[id].scroll.title))].join('・'):''}</div>`}).join('')}</div>`:''}`;
+}
+function startPost(){post={qs:shuffle(ALLQ).slice(0,12),i:0,ans:[],order:null,picked:null};render(1);}
+function vPost(){
+  if(post.i>=post.qs.length) return vPostDone();
+  const q=QMAP[post.qs[post.i]];
+  if(!post.order) post.order=shuffle(q.c.map((_,i)=>i));
+  let body=post.order.map(i=>{let cls=''; if(post.picked!==null){ if(i===q.a) cls='ok'; else if(i===post.picked) cls='ng'; }
+    return `<button class="choice ${cls}" ${post.picked!==null?'disabled':''} onclick="postPick(${i})">${esc(q.c[i])}</button>`;}).join('');
+  if(post.picked!==null){const ok=post.picked===q.a;
+    body+=`<div class="exp ${ok?'ok':'ng'}"><div class="h">${ok?'そのとおり。':'振り返り帳に入りました。'}</div>${q.e}</div><div class="row" style="margin-top:12px"><button class="btn" onclick="post.i++;post.order=null;post.picked=null;render(1)">次へ</button></div>`;}
+  return `<section class="hero" style="padding-top:18px"><h1 style="font-size:20px">事後チェック</h1></section>
+  <div class="card"><div class="qhead"><span>${post.i+1} / ${post.qs.length}</span><span class="tag">${esc(q.scroll.title)}</span></div>
+  <div class="prog"><i style="width:${Math.round(post.i/post.qs.length*100)}%"></i></div>
+  <div class="qtext">${esc(q.q)}</div>${body}</div>`;
+}
+function postPick(i){const id=post.qs[post.i],q=QMAP[id];post.picked=i;post.ans.push([id,i===q.a]);render();}
+function vPostDone(){
+  if(!post.saved){
+    const wrong=post.ans.filter(a=>!a[1]).map(a=>a[0]);
+    wrong.forEach(id=>{if(!S.review.includes(id))S.review.push(id);});
+    post.ans.filter(a=>a[1]).forEach(([id])=>{S.review=S.review.filter(x=>x!==id);});
+    S.history.push({at:Date.now(),wrong});save();post.saved=true;post.wrong=wrong;
+  }
+  const byScroll={};
+  post.ans.forEach(([id,ok])=>{const t=QMAP[id].scroll.title;byScroll[t]=byScroll[t]||{ok:0,ng:0};byScroll[t][ok?'ok':'ng']++;});
+  return `<section class="hero"><h1>振り返り</h1><p>「できた／できなかった」ではなく、次に何を見直すかを確認しましょう。</p></section>
+  <div class="card"><h2>巻ごとの手ごたえ</h2>
+    ${Object.entries(byScroll).map(([t,v])=>`<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span>${esc(t)}</span><span class="tag ${v.ng?'kin':'matcha'}">${v.ng?'見直したい '+v.ng+'問':'説明できそう'}</span></div>`).join('')}
+  </div>
+  ${post.wrong.length?`<div class="card"><h2>見直したい問題</h2>${post.wrong.map(id=>`<details><summary>${esc(QMAP[id].q)}</summary><p><b>答え：</b>${esc(QMAP[id].c[QMAP[id].a])}</p><p class="muted">${QMAP[id].e}</p></details>`).join('')}
+    <div class="callout kin" style="margin-top:12px"><b>ひとこと振り返り</b>なぜその選択肢を選んだのか、いまの自分の考えを書いてみましょう。<textarea placeholder="例：圧が上がったら痰だと思い込んでいた" style="margin-top:6px;min-height:70px"></textarea></div></div>`
+  :`<div class="callout matcha"><b>見直す問題はありません</b>次は「伝達者の巻」で、教える準備をしてみましょう。</div>`}
+  <div class="row"><button class="btn" onclick="post=null;render(1)">もどる</button>${post.wrong.length?`<button class="btn shu" onclick="const ids=post.wrong.slice();post=null;startReview(ids,'今回の見直し問題の解き直し')">いま解き直す</button>`:`<button class="btn shu" onclick="post=null;go('dentatsu')">伝達者の巻へ</button>`}</div>`;
+}
+
+// ---------- DENTATSU (伝達者の巻) ----------
+function vDentatsu(){
+  const p=S.plan;
+  const ai=!!sampleFn;
+  return `<section class="hero"><h1>伝達者の巻</h1><p>学んだことを、自分の病棟で伝えるための巻です。</p></section>
+  <div class="card"><h2>伝達者は「講師」ではなく「ファシリテーター」</h2>
+    <p>正しい内容はこのアプリが持っています。あなたの役割は、<b>アプリと実機を使って、みんなが考えて動ける場をつくること</b>。全部を自分の言葉で説明しなくて大丈夫です。</p>
+    <h3>必ず伝える3つのコアメッセージ</h3>
+    <div class="principle"><div><b>目的から考える</b></div><div><b>アラームはまず患者</b></div><div><b>合併症は予防できる</b></div></div>
+  </div>
+
+  <div class="card"><h2>学習会デザインのコツ</h2>
+    <details><summary>ARCSモデル：やる気の4つのスイッチ</summary>
+      <p><b>A 注意：</b>最初に問いかける。「アラームが鳴ったら最初に何をする？」／実際にアラームを鳴らす。</p>
+      <p><b>R 関連性：</b>「明日の受け持ち患者さん」に結びつける。経過表の実物（個人情報なし）を使う。</p>
+      <p><b>C 自信：</b>小さな成功体験。実機の画面で数字を一緒に見つける、ロールプレイで動けた、を作る。</p>
+      <p><b>S 満足感：</b>最後に受講者自身にコアメッセージを言ってもらう。アプリの事後チェックで成長を確かめる。</p>
+    </details>
+    <details><summary>FISH!哲学：場の雰囲気づくり</summary>
+      <p><b>Play（遊び心）：</b>クイズ形式・アラーム当てゲームで楽しく。</p>
+      <p><b>Make Their Day（人を喜ばせる）：</b>受講者の発言を拾って認める。「その視点いいですね」。</p>
+      <p><b>Be There（その場にいる）：</b>スライドを読むより、受講者の顔を見る。</p>
+      <p><b>Choose Your Attitude（態度を選ぶ）：</b>「間違えていい場」と最初に宣言する。</p>
+    </details>
+    <details><summary>強調すべきところ・削ってよいところ</summary>
+      <p><b>強調：</b>アラーム時の「まず患者」、圧が上がる／下がるの見分け、固定位置の確認、頭部挙上・カフ圧。</p>
+      <p><b>削ってよい：</b>モードの細かい理論、数式。「経過表の数字が何を表すか」がわかれば十分です。</p>
+    </details>
+    <details><summary>スライドに縛られなくていい</summary>
+      <p>学習会＝スライドで説明、である必要はありません。このアプリの画面を一緒に見る、実機を囲む、アラームを鳴らしてロールプレイする。<b>受講者が手と頭を動かす時間</b>を長くするほど記憶に残ります。</p>
+    </details>
+  </div>
+
+  <div class="card"><h2>STEP 1　まず自分で考える</h2>
+    <p class="muted">完璧でなくてOK。自分の病棟の時間や人数で、自由に考えてみましょう。</p>
+    <div class="grid2">
+      <div><label class="f">時間（分）</label><input type="number" id="pTotal" value="${p.total}" min="5" max="120"></div>
+      <div><label class="f">受講人数（人）</label><input type="number" id="pPeople" value="${p.people}" min="1" max="30"></div>
+    </div>
+    <label class="f">進行案（例：0〜5分 導入：〇〇）</label>
+    <textarea id="pFlow" style="min-height:160px" placeholder="0〜5分　導入：&#10;5〜15分　&#10;…">${esc(p.flow)}</textarea>
+    <label class="f">準備物品</label>
+    <textarea id="pItems" placeholder="・&#10;・">${esc(p.items)}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="savePlan()">保存する</button><button class="btn ghost sm" onclick="copyPlan()">コピー</button></div>
+  </div>
+
+  <div class="card"><h2>STEP 2　添削する</h2>
+    <p class="muted">まずはセルフチェック。答えではなく「考えるための問い」が返ってきます。</p>
+    <button class="btn ghost" onclick="selfCheck()">セルフチェック</button>
+    <ul class="checklist" id="chk"></ul>
+    ${ai?`<h3>AIの添削</h3><p class="muted">良いところと、考えを深める問いを返します（書き直しはしません）。</p>
+      <button class="btn" id="aiBtn" onclick="aiReview()">AIに添削してもらう</button>
+      <div class="msg a" id="aiOut" style="display:none;max-width:100%;margin-top:10px"></div>`
+      :`<p class="muted">※AI添削はClaude上で開いたときのみ使えます。上のセルフチェックとモデルプランを活用してください。</p>`}
+    <details style="margin-top:12px"><summary>モデルプランを見る ${S.planSaved?'':'（STEP 1を保存すると開けます）'}</summary>
+      ${S.planSaved?`<pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;margin:8px 0 0">${esc(MODEL_PLAN)}</pre>`:'<p class="muted">まずは自分で考えてから。比べることで、自分の案の良さも見えてきます。</p>'}
+    </details>
+  </div>
+
+  <div class="card"><h2>STEP 3　「これってどうだっけ？」は相談Botへ</h2>
+    ${ai?`<p class="muted">人工呼吸器の基礎や学習会の進め方について相談できます。<b>患者さんの個人情報は入力しないでください。</b></p>
+      <div class="chat" id="chat">${chat.length?chat.map(m=>`<div class="msg ${m.role==='user'?'u':'a'}">${esc(m.content)}</div>`).join(''):`<div class="msg a">こんにちは。学習会の準備で迷っていることや、「これってどうだっけ？」を気軽にどうぞ。</div>`}</div>
+      <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input type="text" id="chatIn" placeholder="例：VCとPCの違いってどう説明すればいい？" onkeydown="if(event.key==='Enter'&&!event.isComposing)sendChat()"><button class="btn" id="chatBtn" onclick="sendChat()">送信</button></div>
+      <div class="row" style="margin-top:8px">${['テスト肺がないときの代わりは？','10分しかないとき何を残す？','質問に答えられなかったら？'].map(t=>`<button class="btn ghost sm" onclick="$('#chatIn').value='${t}';sendChat()">${t}</button>`).join('')}</div>`
+      :`<p class="muted">※相談BotはClaude上で開いたときのみ使えます。わからないことはSTEP 4の連絡先へどうぞ。</p>`}
+  </div>
+
+  <div class="card"><h2>STEP 4　具体的にわからないときは</h2>
+    <p>HCUの集中ケア認定看護師に連絡してください。実機の準備は臨床工学技士にも相談できます。</p>
+    <p class="muted">連絡先：（院内PHS番号をここに記載）</p>
+  </div>`;
+}
+function readPlan(){S.plan={total:+$('#pTotal').value||30,people:+$('#pPeople').value||1,flow:$('#pFlow').value,items:$('#pItems').value};}
+function savePlan(){readPlan(); if(S.plan.flow.trim().length<10){toast('進行案をもう少し書いてみましょう');return;} S.planSaved=true;save();toast('保存しました');render();}
+function copyPlan(){readPlan();const t=`【学習会プラン】${S.plan.total}分・${S.plan.people}人\n${S.plan.flow}\n\n【準備物品】\n${S.plan.items}`;
+  try{navigator.clipboard.writeText(t).then(()=>toast('コピーしました'),()=>toast('コピーできませんでした'));}catch(e){toast('コピーできませんでした');}}
+function selfCheck(){
+  readPlan();save();
+  const f=S.plan.flow, it=S.plan.items, all=f+'\n'+it;
+  const res=[];
+  const chk=(re,ok,q)=>res.push(re.test(all)?[1,ok]:[0,q]);
+  chk(/目的|ゴール|目標|ねらい|到達/,'学習会のゴールが書かれています','終わったとき、受講者が「何をできるようになっていればいい」か、書きましたか？');
+  chk(/導入|問いかけ|クイズ|質問|アイスブレイク|事例/,'導入に注意を引く工夫があります（ARCS：注意）','最初の3分で、受講者の「えっ？」を引き出す仕掛けは考えましたか？');
+  chk(/実機|ハミルトン|Hamilton|HAMILTON|呼吸器本体/,'実機を使う場面があります','受講者が実機に触れる、画面を指差すのはどの場面ですか？');
+  chk(/アラーム|DOPE|ドープ/,'アラーム対応が入っています','コアメッセージ「アラームはまず患者」は、どの場面で伝えますか？');
+  chk(/体験|ロールプレイ|実演|やってみ|触|ワーク|グループ/,'受講者が自分で動く時間があります','受講者が「聞く」だけでなく「動く・話す」時間はどのくらいありますか？');
+  chk(/まとめ|振り返り|事後|確認/,'まとめ・振り返りがあります（ARCS：満足感）','最後に、受講者自身の言葉で何を言ってもらいますか？');
+  chk(/目的|過去|現在|未来/,'「目的から考える」視点が入っています','「なぜこの人は人工呼吸器をつけているのか」を考える時間はありますか？');
+  chk(/合併症|VAP|頭部挙上|カフ/,'合併症の予防が入っています','コアメッセージ「合併症は予防できる」はどこで扱いますか？');
+  // time sum
+  const mins=[...f.matchAll(/(\d+)\s*[〜~\-ー－]\s*(\d+)\s*分/g)];
+  if(mins.length){const end=Math.max(...mins.map(m=>+m[2])); res.push(end<=S.plan.total?[1,`時間配分が${S.plan.total}分の枠に収まっています`]:[0,`進行案が${end}分まであり、${S.plan.total}分を超えています。どこを削りますか？`]);}
+  else res.push([0,'それぞれのパートに何分使うか、書いてみましたか？']);
+  // items
+  const ic=[[/テスト肺|模擬肺/,'テスト肺'],[/BVM|バッグ|ジャクソン|用手/,'用手換気の物品'],[/経過表|記録/,'経過表の見本'],[/臨床工学|ME/,'臨床工学技士への依頼']];
+  const miss=ic.filter(([re])=>!re.test(all)).map(x=>x[1]);
+  res.push(miss.length?[0,`物品・準備で「${miss.join('」「')}」は必要か、考えてみましたか？`]:[1,'物品と事前の依頼がよく考えられています']);
+  $('#chk').innerHTML=res.map(([ok,t])=>`<li class="${ok?'ok':'q'}">${ok?'✓ ':'？ '}${esc(t)}</li>`).join('');
+}
+async function aiReview(){
+  readPlan();save();
+  if(S.plan.flow.trim().length<10){toast('先にSTEP 1を書いてみましょう');return;}
+  const btn=$('#aiBtn'),out=$('#aiOut');btn.disabled=true;out.style.display='block';out.textContent='考えています…';
+  const prompt=`あなたは集中ケア認定看護師で、一般病棟の看護師が企画する「人工呼吸器の学習会」を添削する教育担当です。
+方針：
+- 書き直した完成版は渡さない。本人が自分で考えて力をつけることが目的。
+- まず良いところを2〜3個、具体的に認める。
+- 改善点は「問いかけ」の形で最大3つ（例：「〜の場面で、受講者は何をしていますか？」）。
+- 観点：①コアメッセージ3つ（目的から考える／アラームはまず患者・とりあえず吸引にしない／合併症は予防できる）が入っているか ②ARCSモデル（注意・関連性・自信・満足感）③受講者が動く時間（アクティブラーニング）④時間配分の現実性 ⑤安全面（患者に使用中の機器を使わない、臨床工学技士への事前依頼など）
+- やさしく前向きな日本語で、全体で400字程度。見出しは「よいところ」「考えてみよう」の2つ。マークダウン記号は使わない。
+
+【学習会プラン】時間：${S.plan.total}分、受講人数：${S.plan.people}人
+進行案：
+${S.plan.flow}
+準備物品：
+${S.plan.items||'（未記入）'}`;
+  try{
+    const r=await sampleFn(prompt,{modelTier:'default',onText:({text})=>{out.textContent=text;}});
+    out.textContent=r.text;
+  }catch(e){
+    out.textContent=e&&e.code==='rate_limited'?'混み合っています。少し時間をおいてお試しください。':'AI添削を使えませんでした。セルフチェックを活用してください。';
+  }finally{btn.disabled=false;}
+}
+const BOT_SYS=`あなたは「呼吸器道場」の相談役です。一般病棟の看護師が、病棟内で人工呼吸器の学習会を企画・実施するのを支えます。
+扱う内容：人工呼吸器の基礎（目的、過去・現在・未来でのアセスメント、基本の設定とモード（VC/PC、A/C・SIMV・CPAP+PS）、画面の項目、特殊モードのASV、合併症と予防、アラーム対応とDOPE）、学習会のデザイン（ARCSモデル、FISH!哲学、アクティブラーニング、時間配分、準備物品）。
+方針：
+- 一般病棟の看護師にわかる、やさしい言葉で。専門用語には一言説明を添える。
+- 答えを丸ごと渡すより、考える手がかりと問いを返す。ただし基礎知識の質問には正確に答える。
+- アラーム対応では「まず患者を見る」「とりあえず吸引にしない」を一貫して伝える。
+- 不確かなことは不確かと言う。数値は一般的な目安であると添える。
+- 特定の患者の臨床判断はしない。院内の手順・医師の指示を優先し、具体的なことはHCUの集中ケア認定看護師や臨床工学技士に相談するよう促す。
+- 患者の個人情報が書かれていたら、その内容は扱わず、入力しないよう伝える。
+- 300字程度。マークダウン記号は使わない。`;
+async function sendChat(){
+  if(chatBusy) return;
+  const inp=$('#chatIn'); const t=(inp.value||'').trim(); if(!t) return;
+  chat.push({role:'user',content:t}); inp.value='';
+  const box=$('#chat');
+  if(chat.length===1) box.innerHTML='';
+  box.insertAdjacentHTML('beforeend',`<div class="msg u">${esc(t)}</div><div class="msg a" id="pending">考えています…</div>`);
+  box.scrollTop=box.scrollHeight; chatBusy=true; $('#chatBtn').disabled=true;
+  const msgs=chat.map((m,i)=>({role:m.role,content:i===0?BOT_SYS+'\n\n---\n相談：'+m.content:m.content}));
+  const pend=$('#pending');
+  try{
+    const r=await sampleFn(msgs,{cache:false,modelTier:'default',onText:({text})=>{pend.textContent=text;box.scrollTop=box.scrollHeight;}});
+    pend.textContent=r.text; chat.push({role:'assistant',content:r.text});
+  }catch(e){
+    pend.textContent=e&&e.code==='rate_limited'?'混み合っています。少し時間をおいてお試しください。':'いまは回答できませんでした。具体的なことはHCUの集中ケア認定看護師に相談してください。';
+    chat.pop();
+  }finally{pend.removeAttribute('id');chatBusy=false;const b=$('#chatBtn');if(b)b.disabled=false;}
+}
+
+// =========================================================
+// SIMULATOR（学習用の簡易モデル）
+// =========================================================
+const MODES={
+ 'VC-AC':{name:'VC-A/C',full:'量規定・アシスト/コントロール',keys:['vt','f','ti','peep','fio2'],mand:'VC',sp:'AC'},
+ 'PC-AC':{name:'PC-A/C',full:'圧規定・アシスト/コントロール',keys:['pinsp','f','ti','peep','fio2'],mand:'PC',sp:'AC'},
+ 'SIMV-VC':{name:'SIMV(VC)+PS',full:'量規定SIMV＋プレッシャーサポート',keys:['vt','f','ti','ps','peep','fio2'],mand:'VC',sp:'SIMV'},
+ 'SIMV-PC':{name:'SIMV(PC)+PS',full:'圧規定SIMV＋プレッシャーサポート',keys:['pinsp','f','ti','ps','peep','fio2'],mand:'PC',sp:'SIMV'},
+ 'CPAP':{name:'CPAP+PS',full:'自発呼吸モード（持続気道陽圧＋PS）',keys:['ps','peep','fio2'],mand:null,sp:'SPONT'},
+};
+const SETK={
+ vt:{l:'1回換気量',u:'mL',min:200,max:800,st:10},
+ pinsp:{l:'吸気圧',u:'cmH₂O',min:5,max:35,st:1},
+ f:{l:'呼吸回数',u:'回/分',min:2,max:35,st:1},
+ ti:{l:'吸気時間',u:'秒',min:0.5,max:2.0,st:0.1,dec:1},
+ ps:{l:'PS',u:'cmH₂O',min:0,max:25,st:1},
+ peep:{l:'PEEP',u:'cmH₂O',min:0,max:20,st:1},
+ fio2:{l:'FiO₂',u:'%',min:21,max:100,st:5},
+};
+const PMUS=5;
+let sim=null;
+function simNew(){
+  sim={mode:'VC-AC',set:{vt:450,pinsp:12,f:14,ti:1.0,ps:8,peep:5,fio2:40},
+    pt:{R:10,C:50,spont:0,disc:false},
+    t:0,lungV:0,br:null,expStart:-9,nextMand:0.5,nextSpont:2,breaths:[],lastBreathT:0,
+    N:600,bp:new Float32Array(600),bf:new Float32Array(600),bv:new Float32Array(600),idx:0,acc:0,
+    spo2:97,silenceUntil:-1,sound:false,lastBeep:-9,focus:'mode',lastTs:null,lastUI:0,portraitOK:false};
+  for(let i=0;i<3500;i++) simStep(0.02); // 先に70秒ぶん進めて数値を安定させる
+}
+function simStartBreath(type,trig){
+  const s=sim,M=MODES[s.mode],st=s.set;
+  const kind=type==='mand'?M.mand:'PS';
+  s.br={kind,trig,start:s.t,ti:st.ti,P:kind==='PC'?st.pinsp:(kind==='PS'?st.ps:0),pk:0,peakF:0,v0:s.lungV,spont:type==='ps'};
+}
+function simEndBreath(){
+  const s=sim,b=s.br;
+  const vt=s.pt.disc?0:Math.max(0,(s.lungV-b.v0)*1000);
+  s.breaths.push({t:s.t,vt,pk:s.pt.disc?0:b.pk,spont:b.spont,v0:b.v0});
+  s.lastBreathT=s.t; s.br=null; s.expStart=s.t;
+  s.breaths=s.breaths.filter(x=>s.t-x.t<=60);
+}
+function simStep(dt){
+  const s=sim,M=MODES[s.mode],st=s.set,pt=s.pt,Cl=pt.C/1000,R=pt.R;
+  s.t+=dt; const t=s.t;
+  const canStart=()=>!s.br&&t-s.expStart>=0.5;
+  if(pt.spont>0&&t>=s.nextSpont){
+    s.nextSpont=t+60/pt.spont*(0.85+Math.random()*0.3);
+    if(canStart()){
+      if(M.sp==='AC'){simStartBreath('mand',true);s.nextMand=t+60/st.f;}
+      else if(M.sp==='SIMV'){ if(s.nextMand-t<1.2){simStartBreath('mand',true);s.nextMand=t+60/st.f;} else simStartBreath('ps',true); }
+      else simStartBreath('ps',true);
+    }
+  }
+  if(M.mand&&t>=s.nextMand){ if(canStart()) simStartBreath('mand',false); s.nextMand=t+60/st.f; }
+  let paw,flow;
+  const b=s.br;
+  if(pt.disc){
+    s.lungV=0; paw=0; flow=0;
+    if(b){const el=t-b.start; if(b.kind==='PS'?el>1:el>=b.ti) simEndBreath();}
+  } else if(b){
+    const el=t-b.start;
+    if(b.kind==='VC'){ flow=st.vt/1000/b.ti; const rem=st.vt/1000-(s.lungV-b.v0); if(flow*dt>rem) flow=Math.max(0,rem/dt); s.lungV+=flow*dt; paw=st.peep+s.lungV/Cl+flow*R; }
+    else{
+      const drive=b.P+(b.kind==='PS'?PMUS:(b.trig?PMUS*0.5:0));
+      flow=(drive-s.lungV/Cl)/R; s.lungV+=flow*dt; paw=st.peep+b.P;
+      if(b.trig&&el<0.08) paw=st.peep-1.5;
+      b.peakF=Math.max(b.peakF,flow);
+    }
+    b.pk=Math.max(b.pk,paw);
+    const end=b.kind==='PS'?((el>0.25&&flow<0.25*b.peakF)||el>2.5):el>=b.ti;
+    if(end) simEndBreath();
+  } else {
+    flow=-(s.lungV/Cl)/R; s.lungV=Math.max(0,s.lungV+flow*dt); paw=st.peep;
+  }
+  // SpO2（学習用の目安）
+  const mvalv=s.breaths.reduce((a,x)=>a+Math.max(0,x.vt-150),0)/1000;
+  let pf=pt.C>=40?430:Math.min(320,110+15*st.peep);
+  if(mvalv<3) pf*=Math.max(0.15,mvalv/3);
+  let pao2=pf*st.fio2/100, tgt=100/(1+23400/(pao2**3+150*pao2));
+  if(pt.disc||t-s.lastBreathT>15) tgt=Math.min(tgt,70);
+  s.spo2+=(tgt-s.spo2)*dt/10;
+  s.bp[s.idx]=paw; s.bf[s.idx]=flow*60; s.bv[s.idx]=s.lungV*1000;
+  s.idx=(s.idx+1)%s.N;
+}
+function simMon(){
+  const s=sim,bs=s.breaths,last=bs[bs.length-1]||{vt:0,pk:0,v0:0};
+  // 直近の呼吸（最大8回・30秒以内）から1分あたりに換算する
+  const w=bs.filter(x=>s.t-x.t<=30).slice(-8);
+  let rate=0,mv=0,mvalv=0,fsp=0;
+  if(w.length>=2){ const n=w.length, I=(w[n-1].t-w[0].t)/(n-1);
+    rate=60*n/((w[n-1].t-w[0].t)+Math.max(I,s.t-w[n-1].t));
+    const mvt=w.reduce((a,x)=>a+x.vt,0)/w.length, mva=w.reduce((a,x)=>a+Math.max(0,x.vt-150),0)/w.length;
+    mv=mvt*rate/1000; mvalv=mva*rate/1000; fsp=rate*w.filter(x=>x.spont).length/w.length; }
+  let pm=0; for(let i=0;i<s.N;i++) pm+=s.bp[i]; pm/=s.N;
+  const recent=bs.slice(-4); const autoV=recent.length?recent.reduce((a,x)=>a+x.v0,0)/recent.length:0;
+  if(s.pt.disc){ return {ppeak:0,pmean:pm,vte:0,mv:0,ftotal:rate,fspont:fsp,spo2:s.spo2,etco2:0,autoPeep:0,apnea:s.t-s.lastBreathT}; }
+  return {ppeak:last.pk,pmean:pm,vte:last.vt,mv,ftotal:rate,fspont:fsp,
+    spo2:s.spo2,etco2:mvalv>0.3?Math.min(99,Math.max(15,38*4.2/mvalv)):0,autoPeep:autoV/(s.pt.C/1000),apnea:s.t-s.lastBreathT};
+}
+function simAlarms(m){
+  const s=sim,a=[];
+  if(s.pt.disc) a.push(['回路外れ','hi','ppeak']);
+  if(m.apnea>20) a.push(['無呼吸','hi','ftotal']);
+  if(!s.pt.disc&&m.ppeak>35) a.push(['気道内圧 上限','hi','ppeak']);
+  if(m.mv<4) a.push(['分時換気量 低下','hi','mv']);
+  if(m.mv>15) a.push(['分時換気量 上昇','mid','mv']);
+  if(m.ftotal>35) a.push(['呼吸回数 上限','mid','ftotal']);
+  if(!s.pt.disc&&m.vte<250&&m.apnea<=20) a.push(['1回換気量 低下','mid','vte']);
+  if(m.spo2<90) a.push(['SpO₂ 低下','mid','spo2']);
+  return a;
+}
+function simExplain(m){
+  const s=sim,M=MODES[s.mode],pt=s.pt,out=[];
+  const base={
+    'VC-AC':'<b>VC-A/C</b>：毎回、設定した1回換気量を送ります。量は保証され、圧が肺の状態で変わる → 看護師は<b>圧（Ppeak）</b>を見る。',
+    'PC-AC':'<b>PC-A/C</b>：毎回、設定した圧で送ります。圧は一定で、量が肺の状態で変わる → 看護師は<b>換気量（VTE・分時換気量）</b>を見る。',
+    'SIMV-VC':'<b>SIMV(VC)+PS</b>：設定回数だけ設定量を送り、そのあいだの自発呼吸はPSで後押しします。',
+    'SIMV-PC':'<b>SIMV(PC)+PS</b>：設定回数だけ設定圧で送り、そのあいだの自発呼吸はPSで後押しします。',
+    'CPAP':'<b>CPAP+PS</b>：自発呼吸が前提のモード。吸うたびにPSで後押しします。<b>自発呼吸がなければ換気されません。</b>',
+  }[s.mode];
+  out.push(base);
+  if(pt.disc) out.unshift('<span class="hot">回路外れ：圧も換気量もゼロ。患者→チューブ→回路→本体の順に目で追う。</span>');
+  if(s.mode==='CPAP'&&pt.spont===0) out.unshift('<span class="hot">自発呼吸がないため換気されていません（無呼吸）。CPAP+PSは自発呼吸がある人のモード。</span>');
+  if(M.sp==='SIMV'&&pt.spont===0) out.push('自発呼吸がないので、設定回数の強制換気だけになっています。');
+  if(pt.R>=20){ out.push(M.mand==='VC'?'気道抵抗が高い（痰・狭窄・屈曲）→ <b>VCでは量は保たれ、Ppeakが上がる</b>。':M.mand==='PC'?'気道抵抗が高い（痰・狭窄・屈曲）→ <b>PCでは圧は変わらず、1回換気量が減る</b>。':'気道抵抗が高い → 自発呼吸の1回換気量が減る。'); }
+  if(pt.C<40){ out.push(M.mand==='VC'?'肺が硬い → <b>VCではPpeakが上がる</b>。':M.mand==='PC'?'肺が硬い → <b>PCでは1回換気量が減る</b>。':'肺が硬い → 1回換気量が減る。'); out.push('硬い肺では酸素化が悪くなりやすい。PEEPやFiO₂でSpO₂がどう変わるか試してみよう。'); }
+  if(M.sp==='AC'&&pt.spont>=20) out.push('A/Cでは自発呼吸のたびに強制換気が入るため、<b>呼吸回数と分時換気量が増えます</b>。');
+  if(m.autoPeep>2&&!pt.disc) out.push('<span class="hot">吐ききる前に次の呼吸が来ています（オートPEEP）。吸気時間・回数・気道抵抗を見直すサイン。</span>');
+  return out;
+}
+function simValStr(k){const v=sim.set[k],d=SETK[k].dec||0;return v.toFixed(d);}
+function simAdj(k,dir){
+  const K=SETK[k];let v=sim.set[k]+dir*K.st;
+  if(k==='fio2') v=Math.round(v/5)*5;
+  v=Math.min(K.max,Math.max(K.min,+v.toFixed(2)));
+  sim.set[k]=v; sim.focus=k;
+  if(k==='f') sim.nextMand=Math.min(sim.nextMand,sim.t+60/v);
+  simPanel(); simUI(true);
+}
+function simSetMode(k){sim.mode=k;sim.focus='mode';sim.nextMand=sim.t+0.3;simPanel();simUI(true);}
+function simSetPt(k,v){sim.pt[k]=v; if(k==='spont') sim.nextSpont=sim.t+1; simPanel(); simUI(true);}
+function simPanel(){
+  const s=sim,M=MODES[s.mode];
+  const btn=(on,txt,fn)=>`<button class="sb ${on?'on':''}" onclick="${fn}">${txt}</button>`;
+  $('#spanel').innerHTML=`
+    <div class="sh">モード</div>
+    <div class="sgrid">${Object.entries(MODES).map(([k,m])=>btn(s.mode===k,m.name,`simSetMode('${k}')`)).join('')}</div>
+    <div class="sh">設定</div>
+    ${M.keys.map(k=>`<div class="srow ${s.focus===k?'foc':''}">
+      <button class="sl" onclick="sim.focus='${k}';simPanel();simUI(true)">${SETK[k].l}<small>${SETK[k].u}</small></button>
+      <button class="pm" onclick="simAdj('${k}',-1)">−</button><span class="sv">${simValStr(k)}</span><button class="pm" onclick="simAdj('${k}',1)">＋</button></div>`).join('')}
+    <div class="sh">患者の状態</div>
+    <div class="sl2">気道抵抗</div>
+    <div class="sgrid three">${btn(s.pt.R===10,'正常',"simSetPt('R',10)")}${btn(s.pt.R===25,'痰・狭窄',"simSetPt('R',25)")}${btn(s.pt.R===60,'チューブ屈曲',"simSetPt('R',60)")}</div>
+    <div class="sl2">肺の硬さ</div>
+    <div class="sgrid">${btn(s.pt.C===50,'正常',"simSetPt('C',50)")}${btn(s.pt.C===20,'硬い肺',"simSetPt('C',20)")}</div>
+    <div class="sl2">自発呼吸</div>
+    <div class="sgrid three">${btn(s.pt.spont===0,'なし',"simSetPt('spont',0)")}${btn(s.pt.spont===12,'あり',"simSetPt('spont',12)")}${btn(s.pt.spont===30,'頻呼吸',"simSetPt('spont',30)")}</div>
+    <div class="sgrid" style="margin-top:6px">${btn(s.pt.disc,s.pt.disc?'回路をつなぐ':'回路を外す',"simSetPt('disc',!sim.pt.disc)")}${btn(s.sound,s.sound?'音：ON':'音：OFF',"sim.sound=!sim.sound;simPanel()")}</div>
+    <div class="sgrid" style="margin-top:6px">${btn(false,'はじめに戻す',"simNew();simPanel();simUI(true)")}${btn(false,'閉じる',"closeSim()")}</div>
+    <p class="snote">学習用の簡易モデルです。実際の機器の動きや数値とは異なります。モード名は機種によって異なります。</p>`;
+}
+const MONK=[['ppeak','Ppeak','cmH₂O',0],['pmean','Pmean','cmH₂O',0],['vte','VTE','mL',0],['mv','分時換気量','L/分',1],['ftotal','fTotal','回/分',0],['fspont','fSpont','回/分',0],['spo2','SpO₂','%',0],['etco2','EtCO₂','mmHg',0]];
+function simUI(force){
+  const s=sim,m=simMon(),al=simAlarms(m);
+  if(!force&&s.t-s.lastUI<0.25) return; s.lastUI=s.t;
+  const hot=new Set(al.map(a=>a[2]));
+  $('#smode').textContent=MODES[s.mode].name;
+  $('#snums').innerHTML=MONK.map(([k,n,u,d])=>{let v=m[k];let txt=(k==='etco2'&&!v)?'--':v.toFixed(d);
+    return `<button class="sn ${hot.has(k)?'hi':''} ${s.focus===k?'foc':''}" onclick="sim.focus='${k}';simUI(true)"><span class="n">${n}</span><span class="v">${txt}</span><span class="u">${u}</span></button>`;}).join('');
+  const sil=s.silenceUntil>s.t;
+  const ab=$('#salarm');
+  if(al.length){ab.className='sal '+(al[0][1]==='mid'?'mid':'hi')+(sil?' sil':''); ab.textContent='⚠ '+al.map(a=>a[0]).join('／');}
+  else {ab.className='sal ok'; ab.textContent='アラームなし';}
+  $('#ssil').textContent=sil?`消音中 ${Math.ceil(s.silenceUntil-s.t)}秒`:'消音';
+  let info=simExplain(m);
+  if(sil&&al.length) info.unshift('<span class="hot">消音中です。原因は解決していません。患者を見ましたか？</span>');
+  const f=s.focus, d=SETTEI[f]||MONX[f];
+  $('#sinfo').innerHTML=`<div>${info.join('<br>')}</div>${d?`<div class="sfoc"><b>${d[0]}</b>：${d[1]} <span>${d[2]}</span></div>`:''}`;
+  if(s.sound&&!sil&&al.some(a=>a[1]==='hi')&&s.t-s.lastBeep>2.5){s.lastBeep=s.t;beep();}
+}
+function simDraw(){
+  const c=$('#simCanvas'); if(!c) return;
+  const dpr=window.devicePixelRatio||1, W=Math.max(10,c.clientWidth*dpr), H=Math.max(10,c.clientHeight*dpr);
+  if(c.width!==W||c.height!==H){c.width=W;c.height=H;}
+  const g=c.getContext('2d'); g.fillStyle='#0b1118'; g.fillRect(0,0,W,H);
+  const s=sim,N=s.N,rows=[['Paw','cmH₂O',s.bp,0,40,'#f2c14e'],['Flow','L/分',s.bf,-60,60,'#5ed3a0'],['Volume','mL',s.bv,0,800,'#6fb3ff']];
+  const rh=H/3, fs=11*dpr;
+  rows.forEach(([lab,u,buf,lo,hi,col],r)=>{
+    const top=r*rh+4*dpr,h=rh-8*dpr;
+    g.strokeStyle='#1d2a38';g.lineWidth=1;g.beginPath();
+    const zy=top+h*(1-(0-lo)/(hi-lo)); g.moveTo(0,zy);g.lineTo(W,zy);g.stroke();
+    g.fillStyle='#7f93a5';g.font=`${fs}px sans-serif`;g.fillText(`${lab} (${u})`,6*dpr,top+fs);
+    g.fillText(String(hi),W-28*dpr,top+fs);
+    g.strokeStyle=col;g.lineWidth=2*dpr;g.beginPath();
+    const gap=12; let pen=false;
+    for(let i=0;i<N;i++){
+      const dist=(i-s.idx+N)%N; if(dist<gap){pen=false;continue;}
+      const x=i/(N-1)*W, v=Math.min(hi,Math.max(lo,buf[i])), y=top+h*(1-(v-lo)/(hi-lo));
+      if(!pen){g.moveTo(x,y);pen=true;} else g.lineTo(x,y);
+    }
+    g.stroke();
+  });
+}
+let simRAF=null;
+function simLoop(ts){
+  if(!$('#simCanvas')){simRAF=null;return;}
+  const now=ts/1000; const el=sim.lastTs==null?0:Math.min(0.1,now-sim.lastTs); sim.lastTs=now;
+  sim.acc+=el; while(sim.acc>=0.02){simStep(0.02);sim.acc-=0.02;}
+  simDraw(); simUI(false);
+  simRAF=requestAnimationFrame(simLoop);
+}
+function vSim(){
+  return `<div class="sim" id="sim">
+    <div class="scr">
+      <div class="sbar"><span class="smode" id="smode"></span><span class="sal ok" id="salarm">アラームなし</span><button class="ssil" id="ssil" onclick="sim.silenceUntil=sim.t+120;simUI(true)">消音</button><button class="sx" onclick="closeSim()">✕</button></div>
+      <canvas id="simCanvas"></canvas>
+      <div class="snums" id="snums"></div>
+      <div class="sinfo" id="sinfo"></div>
+    </div>
+    <div class="spanel" id="spanel"></div>
+    <div class="rot"><div class="rot-ic">⟳</div><b>画面を横にしてください</b><p>本物の人工呼吸器のように、左に画面、右に設定ボタンが並びます。</p><button class="btn ghost sm" style="color:#fff;border-color:#fff" onclick="sim.portraitOK=true;$('#sim').classList.add('force')">縦のまま使う</button></div>
+  </div>`;
+}
+after.sim=()=>{
+  if(!sim) simNew();
+  sim.lastTs=null;
+  if(sim.portraitOK) $('#sim').classList.add('force');
+  simPanel(); simUI(true);
+  cancelAnimationFrame(simRAF); simRAF=requestAnimationFrame(simLoop);
+};
+let simReturn='kogi';
+function closeSim(){ go(simReturn||'kogi'); }
+function openSim(){ simReturn=cur==='sim'?'kogi':cur; go('sim'); }
+
+// ---------- boot ----------
+(function(){const h=location.hash.slice(1);cur=VIEWS.includes(h)?h:'home';render();})();
+// オフライン対応（GitHub Pages などHTTPSで公開したときのみ有効）
+if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
