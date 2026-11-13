@@ -1,6 +1,6 @@
 // 呼吸器道場 Service Worker — オフラインでも使えるようにする
 // 内容を更新したら VERSION を上げると、利用者の端末のキャッシュが入れ替わります。
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'kokyuki-dojo-' + VERSION;
 const CORE = [
   './',

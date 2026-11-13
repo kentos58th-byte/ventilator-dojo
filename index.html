@@ -165,7 +165,7 @@ button.mv.sel{border-color:#5aa0ff;box-shadow:0 0 0 2px rgba(90,160,255,.35)}
 .sal.sil{animation:none;opacity:.8}
 .ssil,.sx{border:1px solid #3a4b5d;background:#18232f;color:#e9f1f7;border-radius:6px;padding:2px 10px;font-size:12px;white-space:nowrap}
 #simCanvas{flex:1;width:100%;min-height:90px;margin:6px 0;border-radius:6px}
-.snums{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.snums{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
 .sn{background:#18232f;border:1px solid #233243;border-radius:6px;padding:3px 5px;text-align:left;color:inherit;display:flex;flex-direction:column;line-height:1.15}
 .sn .n{font-size:10px;color:#9fb3c4;white-space:nowrap}.sn .v{font-size:18px;font-weight:700}.sn .u{font-size:9px;color:#7f93a5}
 .sn.hi .v{color:#ff6b5e}.sn.foc{border-color:#5aa0ff}
@@ -191,8 +191,8 @@ button.mv.sel{border-color:#5aa0ff;box-shadow:0 0 0 2px rgba(90,160,255,.35)}
 .rot p{font-size:13px;color:#9fb3c4;margin:0 0 8px}
 @media (orientation:portrait) and (max-width:820px){.sim:not(.force) .rot{display:flex}}
 .sim.force{grid-template-columns:1fr;grid-template-rows:minmax(420px,62vh) auto;overflow:auto}
-.sim.force .snums{grid-template-columns:repeat(4,1fr)}
-@media (max-height:460px){.sn .v{font-size:15px}.sinfo{font-size:11px}.srow .pm{height:26px}.srow .sv{font-size:15px}}
+.sim.force .snums{grid-template-columns:repeat(5,1fr)}
+@media (max-height:460px){.sn{padding:2px 5px}.sn .u{display:none}.sn .v{font-size:15px}.sinfo{font-size:11px;max-height:22%}.srow .pm{height:26px}.srow .sv{font-size:15px}}
 .vcpc{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
 .vcpc th,.vcpc td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
 .vcpc th{background:var(--ai-l);color:var(--ai)}
@@ -488,6 +488,8 @@ const MONX={
  ftotal:['fTotal（総呼吸回数）','機械の呼吸＋自発呼吸の、1分間の回数。','設定回数より多い＝自発呼吸がある。頻呼吸は苦痛・発熱・不安・換気不足のサインのことも。'],
  fspont:['fSpont（自発呼吸回数）','PSなどで支えられた自発呼吸の回数。','SIMVやCPAP+PSで自発が増えてきた＝離脱に近づく材料のひとつ。'],
  spo2:['SpO₂','酸素化の指標（生体モニター）。','FiO₂・PEEPとセットで読む。'],
+ autoPeep:['Auto-PEEP（内因性PEEP）','吐ききれずに肺に残った空気によって、設定したPEEPに上乗せされている圧。','Paw波形には出ない（画面のPEEPは設定値のまま）。Flow波形で、呼気が0に戻る前に次の吸気が始まっていないかを見る。機種によってはモニター値として表示され、呼気ポーズ（呼気ホールド）で測ることもできる。'],
+ ie:['I:E比','吸気時間と呼気時間の比。1:2なら、呼気は吸気の2倍の時間。','回数を増やす・吸気時間を延ばすと呼気の時間が短くなり、吐ききれずにAuto-PEEPの原因になる。'],
  etco2:['EtCO₂','吐いた息に含まれるCO₂。換気の指標。','分時換気量が減ると上がる。（シミュレーターの値は学習用の目安）'],
 };
 
@@ -1117,13 +1119,15 @@ function simNew(){
   sim={mode:'VC-AC',set:{vt:450,pinsp:12,f:14,ti:1.0,ps:8,peep:5,fio2:40},
     pt:{R:10,C:50,spont:0,disc:false},
     t:0,lungV:0,br:null,expStart:-9,nextMand:0.5,nextSpont:2,breaths:[],lastBreathT:0,
-    N:600,bp:new Float32Array(600),bf:new Float32Array(600),bv:new Float32Array(600),idx:0,acc:0,
+    N:600,bp:new Float32Array(600),bf:new Float32Array(600),bv:new Float32Array(600),mk:new Uint8Array(600),pendMark:0,idx:0,acc:0,
     spo2:97,silenceUntil:-1,sound:false,lastBeep:-9,focus:'mode',lastTs:null,lastUI:0,portraitOK:false};
   for(let i=0;i<3500;i++) simStep(0.02); // 先に70秒ぶん進めて数値を安定させる
 }
 function simStartBreath(type,trig){
   const s=sim,M=MODES[s.mode],st=s.set;
   const kind=type==='mand'?M.mand:'PS';
+  // 呼気が0に戻る前に次の吸気が始まったら、Flow波形に印をつける
+  if(!s.pt.disc){const resid=s.lungV/(s.pt.C/1000)/s.pt.R*60; if(resid>3&&s.lungV>0.02) s.pendMark=1;}
   s.br={kind,trig,start:s.t,ti:st.ti,P:kind==='PC'?st.pinsp:(kind==='PS'?st.ps:0),pk:0,peakF:0,v0:s.lungV,spont:type==='ps'};
 }
 function simEndBreath(){
@@ -1136,7 +1140,7 @@ function simEndBreath(){
 function simStep(dt){
   const s=sim,M=MODES[s.mode],st=s.set,pt=s.pt,Cl=pt.C/1000,R=pt.R;
   s.t+=dt; const t=s.t;
-  const canStart=()=>!s.br&&t-s.expStart>=0.5;
+  const canStart=()=>!s.br&&t-s.expStart>=0.3;
   if(pt.spont>0&&t>=s.nextSpont){
     s.nextSpont=t+60/pt.spont*(0.85+Math.random()*0.3);
     if(canStart()){
@@ -1145,7 +1149,8 @@ function simStep(dt){
       else simStartBreath('ps',true);
     }
   }
-  if(M.mand&&t>=s.nextMand){ if(canStart()) simStartBreath('mand',false); s.nextMand=t+60/st.f; }
+  // 強制換気は飛ばさない（吸気中なら終わりしだい送る）。実機と同じく、吐ききれていなくても次の呼吸が来る
+  if(M.mand&&t>=s.nextMand&&!s.br&&t-s.expStart>=0.1){ simStartBreath('mand',false); s.nextMand=t+60/st.f; }
   let paw,flow;
   const b=s.br;
   if(pt.disc){
@@ -1173,7 +1178,7 @@ function simStep(dt){
   let pao2=pf*st.fio2/100, tgt=100/(1+23400/(pao2**3+150*pao2));
   if(pt.disc||t-s.lastBreathT>15) tgt=Math.min(tgt,70);
   s.spo2+=(tgt-s.spo2)*dt/10;
-  s.bp[s.idx]=paw; s.bf[s.idx]=flow*60; s.bv[s.idx]=s.lungV*1000;
+  s.bp[s.idx]=paw; s.bf[s.idx]=flow*60; s.bv[s.idx]=s.lungV*1000; s.mk[s.idx]=s.pendMark; s.pendMark=0;
   s.idx=(s.idx+1)%s.N;
 }
 function simMon(){
@@ -1187,8 +1192,9 @@ function simMon(){
     mv=mvt*rate/1000; mvalv=mva*rate/1000; fsp=rate*w.filter(x=>x.spont).length/w.length; }
   let pm=0; for(let i=0;i<s.N;i++) pm+=s.bp[i]; pm/=s.N;
   const recent=bs.slice(-4); const autoV=recent.length?recent.reduce((a,x)=>a+x.v0,0)/recent.length:0;
-  if(s.pt.disc){ return {ppeak:0,pmean:pm,vte:0,mv:0,ftotal:rate,fspont:fsp,spo2:s.spo2,etco2:0,autoPeep:0,apnea:s.t-s.lastBreathT}; }
-  return {ppeak:last.pk,pmean:pm,vte:last.vt,mv,ftotal:rate,fspont:fsp,
+  const M=MODES[s.mode], ie=M.mand?(60/s.set.f-s.set.ti)/s.set.ti:null;
+  if(s.pt.disc){ return {ie,ppeak:0,pmean:pm,vte:0,mv:0,ftotal:rate,fspont:fsp,spo2:s.spo2,etco2:0,autoPeep:0,apnea:s.t-s.lastBreathT}; }
+  return {ie,ppeak:last.pk,pmean:pm,vte:last.vt,mv,ftotal:rate,fspont:fsp,
     spo2:s.spo2,etco2:mvalv>0.3?Math.min(99,Math.max(15,38*4.2/mvalv)):0,autoPeep:autoV/(s.pt.C/1000),apnea:s.t-s.lastBreathT};
 }
 function simAlarms(m){
@@ -1219,7 +1225,12 @@ function simExplain(m){
   if(pt.R>=20){ out.push(M.mand==='VC'?'気道抵抗が高い（痰・狭窄・屈曲）→ <b>VCでは量は保たれ、Ppeakが上がる</b>。':M.mand==='PC'?'気道抵抗が高い（痰・狭窄・屈曲）→ <b>PCでは圧は変わらず、1回換気量が減る</b>。':'気道抵抗が高い → 自発呼吸の1回換気量が減る。'); }
   if(pt.C<40){ out.push(M.mand==='VC'?'肺が硬い → <b>VCではPpeakが上がる</b>。':M.mand==='PC'?'肺が硬い → <b>PCでは1回換気量が減る</b>。':'肺が硬い → 1回換気量が減る。'); out.push('硬い肺では酸素化が悪くなりやすい。PEEPやFiO₂でSpO₂がどう変わるか試してみよう。'); }
   if(M.sp==='AC'&&pt.spont>=20) out.push('A/Cでは自発呼吸のたびに強制換気が入るため、<b>呼吸回数と分時換気量が増えます</b>。');
-  if(m.autoPeep>2&&!pt.disc) out.push('<span class="hot">吐ききる前に次の呼吸が来ています（オートPEEP）。吸気時間・回数・気道抵抗を見直すサイン。</span>');
+  if(m.autoPeep>=1&&!pt.disc){
+    out.unshift(`<span class="hot">Auto-PEEP 約${m.autoPeep.toFixed(1)} cmH₂O：吐ききる前に次の吸気が来ています。</span>`);
+    out.push('<b>見つけ方</b>：<b>Flow波形</b>の呼気（下向き）が0の線に戻る前に、次の吸気が始まっている（<span class="hot">赤い〇</span>）。<b>Volume波形</b>の谷が0まで下がらない。<b>Paw波形のPEEPは設定値のまま</b>で、Auto-PEEPは圧の波形には出ないことに注意。');
+    out.push(M.mand==='VC'?'<b>影響</b>：VCでは肺に空気が残る分、<b>Ppeakが上がる</b>。胸の中の圧が上がり、血圧低下の原因にもなる。':M.mand==='PC'?'<b>影響</b>：PCでは押し込める圧の差が小さくなり、<b>1回換気量（VTE）が減る</b>。血圧低下の原因にもなる。':'<b>影響</b>：吸い始めに余分な力が必要になり、呼吸仕事量が増える。');
+    out.push('<b>原因の考え方</b>：呼吸回数が多い・吸気時間が長い（I:Eの呼気が短い）・気道抵抗が高い（痰・気管支の狭窄）。設定の変更は医師と相談。');
+  }
   return out;
 }
 function simValStr(k){const v=sim.set[k],d=SETK[k].dec||0;return v.toFixed(d);}
@@ -1230,6 +1241,12 @@ function simAdj(k,dir){
   sim.set[k]=v; sim.focus=k;
   if(k==='f') sim.nextMand=Math.min(sim.nextMand,sim.t+60/v);
   simPanel(); simUI(true);
+}
+function simPreset(k){
+  const s=sim;
+  if(k==='autopeep'){ s.mode='VC-AC'; Object.assign(s.set,{vt:450,f:26,ti:1.5,peep:5}); Object.assign(s.pt,{R:25,C:50,spont:0,disc:false}); s.focus='autoPeep'; toast('VC-A/C・回数26・吸気時間1.5秒・痰あり：Flow波形の赤い〇を見よう'); }
+  if(k==='sputum'){ s.mode='VC-AC'; Object.assign(s.set,{vt:450,f:14,ti:1.0,peep:5}); Object.assign(s.pt,{R:25,C:50,spont:0,disc:false}); s.focus='ppeak'; toast('痰あり：VCとPCを切り替えて比べてみよう'); }
+  s.nextMand=s.t+0.3; simPanel(); simUI(true);
 }
 function simSetMode(k){sim.mode=k;sim.focus='mode';sim.nextMand=sim.t+0.3;simPanel();simUI(true);}
 function simSetPt(k,v){sim.pt[k]=v; if(k==='spont') sim.nextSpont=sim.t+1; simPanel(); simUI(true);}
@@ -1251,16 +1268,18 @@ function simPanel(){
     <div class="sl2">自発呼吸</div>
     <div class="sgrid three">${btn(s.pt.spont===0,'なし',"simSetPt('spont',0)")}${btn(s.pt.spont===12,'あり',"simSetPt('spont',12)")}${btn(s.pt.spont===30,'頻呼吸',"simSetPt('spont',30)")}</div>
     <div class="sgrid" style="margin-top:6px">${btn(s.pt.disc,s.pt.disc?'回路をつなぐ':'回路を外す',"simSetPt('disc',!sim.pt.disc)")}${btn(s.sound,s.sound?'音：ON':'音：OFF',"sim.sound=!sim.sound;simPanel()")}</div>
+    <div class="sh">体験してみる</div>
+    <div class="sgrid">${btn(false,'Auto-PEEP',"simPreset('autopeep')")}${btn(false,'痰（VCとPC）',"simPreset('sputum')")}</div>
     <div class="sgrid" style="margin-top:6px">${btn(false,'はじめに戻す',"simNew();simPanel();simUI(true)")}${btn(false,'閉じる',"closeSim()")}</div>
     <p class="snote">学習用の簡易モデルです。実際の機器の動きや数値とは異なります。モード名は機種によって異なります。</p>`;
 }
-const MONK=[['ppeak','Ppeak','cmH₂O',0],['pmean','Pmean','cmH₂O',0],['vte','VTE','mL',0],['mv','分時換気量','L/分',1],['ftotal','fTotal','回/分',0],['fspont','fSpont','回/分',0],['spo2','SpO₂','%',0],['etco2','EtCO₂','mmHg',0]];
+const MONK=[['ppeak','Ppeak','cmH₂O',0],['pmean','Pmean','cmH₂O',0],['autoPeep','Auto-PEEP','cmH₂O',1],['vte','VTE','mL',0],['mv','分時換気量','L/分',1],['ftotal','fTotal','回/分',0],['fspont','fSpont','回/分',0],['ie','I:E','',1],['spo2','SpO₂','%',0],['etco2','EtCO₂','mmHg',0]];
 function simUI(force){
   const s=sim,m=simMon(),al=simAlarms(m);
   if(!force&&s.t-s.lastUI<0.25) return; s.lastUI=s.t;
-  const hot=new Set(al.map(a=>a[2]));
+  const hot=new Set(al.map(a=>a[2])); if(m.autoPeep>=1&&!s.pt.disc){hot.add('autoPeep');hot.add('ie');}
   $('#smode').textContent=MODES[s.mode].name;
-  $('#snums').innerHTML=MONK.map(([k,n,u,d])=>{let v=m[k];let txt=(k==='etco2'&&!v)?'--':v.toFixed(d);
+  $('#snums').innerHTML=MONK.map(([k,n,u,d])=>{let v=m[k];let txt=(k==='etco2'&&!v)?'--':k==='ie'?(v==null?'--':v>0?'1:'+v.toFixed(1):'逆比'):v.toFixed(d);
     return `<button class="sn ${hot.has(k)?'hi':''} ${s.focus===k?'foc':''}" onclick="sim.focus='${k}';simUI(true)"><span class="n">${n}</span><span class="v">${txt}</span><span class="u">${u}</span></button>`;}).join('');
   const sil=s.silenceUntil>s.t;
   const ab=$('#salarm');
@@ -1273,28 +1292,56 @@ function simUI(force){
   $('#sinfo').innerHTML=`<div>${info.join('<br>')}</div>${d?`<div class="sfoc"><b>${d[0]}</b>：${d[1]} <span>${d[2]}</span></div>`:''}`;
   if(s.sound&&!sil&&al.some(a=>a[1]==='hi')&&s.t-s.lastBeep>2.5){s.lastBeep=s.t;beep();}
 }
+function niceMax(v,opts){for(const o of opts) if(v<=o*0.92) return o; return opts[opts.length-1];}
 function simDraw(){
   const c=$('#simCanvas'); if(!c) return;
   const dpr=window.devicePixelRatio||1, W=Math.max(10,c.clientWidth*dpr), H=Math.max(10,c.clientHeight*dpr);
   if(c.width!==W||c.height!==H){c.width=W;c.height=H;}
   const g=c.getContext('2d'); g.fillStyle='#0b1118'; g.fillRect(0,0,W,H);
-  const s=sim,N=s.N,rows=[['Paw','cmH₂O',s.bp,0,40,'#f2c14e'],['Flow','L/分',s.bf,-60,60,'#5ed3a0'],['Volume','mL',s.bv,0,800,'#6fb3ff']];
-  const rh=H/3, fs=11*dpr;
-  rows.forEach(([lab,u,buf,lo,hi,col],r)=>{
-    const top=r*rh+4*dpr,h=rh-8*dpr;
-    g.strokeStyle='#1d2a38';g.lineWidth=1;g.beginPath();
-    const zy=top+h*(1-(0-lo)/(hi-lo)); g.moveTo(0,zy);g.lineTo(W,zy);g.stroke();
-    g.fillStyle='#7f93a5';g.font=`${fs}px sans-serif`;g.fillText(`${lab} (${u})`,6*dpr,top+fs);
-    g.fillText(String(hi),W-28*dpr,top+fs);
-    g.strokeStyle=col;g.lineWidth=2*dpr;g.beginPath();
-    const gap=12; let pen=false;
-    for(let i=0;i<N;i++){
-      const dist=(i-s.idx+N)%N; if(dist<gap){pen=false;continue;}
-      const x=i/(N-1)*W, v=Math.min(hi,Math.max(lo,buf[i])), y=top+h*(1-(v-lo)/(hi-lo));
-      if(!pen){g.moveTo(x,y);pen=true;} else g.lineTo(x,y);
-    }
+  const s=sim,N=s.N,sec=Math.round(N*0.02);
+  // 縦軸は波形の大きさに合わせて自動で目盛りを切り替える（実機と同じ）
+  let mp=0,mf=0,mv=0; for(let i=0;i<N;i++){mp=Math.max(mp,s.bp[i]);mf=Math.max(mf,Math.abs(s.bf[i]));mv=Math.max(mv,s.bv[i]);}
+  const pH=niceMax(mp,[20,40,60,80]), fH=niceMax(mf,[30,60,90,120,180]), vH=niceMax(mv,[400,800,1200,1600]);
+  const rows=[
+    {lab:'Paw 気道内圧',u:'cmH₂O',buf:s.bp,lo:0,hi:pH,col:'#f2c14e',ticks:[0,pH/2,pH],ref:s.pt.disc?0:s.set.peep},
+    {lab:'Flow 流量',u:'L/分',buf:s.bf,lo:-fH,hi:fH,col:'#5ed3a0',ticks:[-fH,0,fH],note:['吸気 ↑','呼気 ↓']},
+    {lab:'Volume 換気量',u:'mL',buf:s.bv,lo:0,hi:vH,col:'#6fb3ff',ticks:[0,vH/2,vH]}];
+  const fs=Math.round(10.5*dpr), L=Math.round(36*dpr), B=Math.round(16*dpr), RM=Math.round(6*dpr);
+  const PW=W-L-RM, rh=(H-B)/3, X=i=>L+i/(N-1)*PW, gap=12;
+  g.font=`${fs}px sans-serif`; g.lineCap='round'; g.lineJoin='round';
+  // 横軸：時間（秒）
+  for(let t=0;t<=sec;t++){const x=L+t/sec*PW;
+    g.strokeStyle=t%2?'#121c27':'#1a2633'; g.lineWidth=1; g.beginPath(); g.moveTo(x,0); g.lineTo(x,H-B); g.stroke();
+    if(t%2===0){g.fillStyle='#9fb3c4'; g.textBaseline='bottom'; g.textAlign=t===0?'left':t===sec?'right':'center'; g.fillText(String(t),x,H-2*dpr);}}
+  g.textAlign='right'; g.fillStyle='#9fb3c4'; g.fillText('秒',L-6*dpr,H-2*dpr);
+  rows.forEach((r,k)=>{
+    const top=k*rh+5*dpr, h=rh-10*dpr;
+    const Y=v=>top+h*(1-(Math.min(r.hi,Math.max(r.lo,v))-r.lo)/(r.hi-r.lo));
+    if(k>0){g.strokeStyle='#2c3a48'; g.lineWidth=1*dpr; g.beginPath(); g.moveTo(0,k*rh); g.lineTo(W,k*rh); g.stroke();}
+    // 縦軸の目盛りと数値
+    r.ticks.forEach(v=>{const y=Y(v), zero=v===0; if(h<60*dpr&&!zero&&v!==r.hi&&v!==r.lo) return;
+      g.strokeStyle=zero?'#8aa2b8':'#223040'; g.lineWidth=zero?1.6*dpr:1; g.setLineDash(zero?[]:[3*dpr,4*dpr]);
+      g.beginPath(); g.moveTo(L,y); g.lineTo(W-RM,y); g.stroke(); g.setLineDash([]);
+      g.fillStyle=zero?'#e9f1f7':'#9fb3c4'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(String(Math.round(v)),L-6*dpr,y);});
+    // 設定PEEPのライン
+    if(r.ref>0){const y=Y(r.ref); g.strokeStyle='rgba(242,193,78,.55)'; g.lineWidth=1*dpr; g.setLineDash([6*dpr,4*dpr]);
+      g.beginPath(); g.moveTo(L,y); g.lineTo(W-RM,y); g.stroke(); g.setLineDash([]);
+      g.fillStyle='rgba(242,193,78,.9)'; g.textAlign='right'; g.textBaseline='bottom'; g.fillText('設定PEEP',W-RM-2*dpr,y-2*dpr);}
+    // 項目名と単位
+    g.textAlign='left'; g.textBaseline='top'; g.fillStyle='#e9f1f7'; g.fillText(`${r.lab}（${r.u}）`,L+5*dpr,top+1*dpr);
+    if(r.note){g.fillStyle='#9fb3c4'; g.textAlign='right'; g.textBaseline='top'; g.fillText(r.note[0],W-RM-2*dpr,top+1*dpr); g.textBaseline='bottom'; g.fillText(r.note[1],W-RM-2*dpr,top+h);}
+    // 波形
+    g.strokeStyle=r.col; g.lineWidth=2.2*dpr; g.beginPath(); let pen=false;
+    for(let i=0;i<N;i++){const dist=(i-s.idx+N)%N; if(dist<gap){pen=false;continue;}
+      const x=X(i), y=Y(r.buf[i]); if(!pen){g.moveTo(x,y);pen=true;} else g.lineTo(x,y);}
     g.stroke();
+    // Auto-PEEPの印（呼気が0に戻る前に次の吸気）
+    if(k===1){ for(let i=0;i<N;i++){ if(!s.mk[i]) continue; const j=(i-1+N)%N; if((j-s.idx+N)%N<gap) continue;
+        const x=X(j), y=Y(r.buf[j]), y0=Y(0);
+        g.strokeStyle='#ff6b5e'; g.lineWidth=1.5*dpr; g.setLineDash([3*dpr,3*dpr]); g.beginPath(); g.moveTo(x,y); g.lineTo(x,y0); g.stroke(); g.setLineDash([]);
+        g.lineWidth=2.2*dpr; g.beginPath(); g.arc(x,y,5*dpr,0,Math.PI*2); g.stroke(); } }
   });
+  g.textBaseline='alphabetic'; g.textAlign='left';
 }
 let simRAF=null;
 function simLoop(ts){
